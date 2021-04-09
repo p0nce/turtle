@@ -1,5 +1,5 @@
 {
-    "name": "attractors",
+    "name": "minimal",
     "dependencies":
     {
         "turtle": { "path": "../.." }
