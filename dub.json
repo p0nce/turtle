@@ -1,6 +1,10 @@
 {
     "name": "turtle",
 
+    "license": "BSL-1.0",
+
+    "description": "Tiny game engine for creative Friday programming.",
+
     "importPaths": ["source"],
     "sourcePaths": ["source"],
 
