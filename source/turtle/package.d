@@ -9,7 +9,10 @@ public import dplug.graphics.image;
 public import dplug.graphics.color;
 public import dplug.graphics.drawex;
 
+public import turtle.color;
 public import turtle.graphics;
 public import turtle.renderer;
 public import turtle.random;
 public import turtle.game;
+
+

@@ -12,7 +12,7 @@ class Minimal : TurtleGame
 {
     override void load()
     {
-        setBackgroundColor( RGBA(106, 0, 53, 255) );
+        setBackgroundColor( color("#6A0035") );
     }
 
     override void draw()
@@ -25,8 +25,7 @@ class Minimal : TurtleGame
                 float zoom = windowHeight/4 * (1.0 - layer / 7.0) ^^ (1.0 + 0.2 * cos(elapsedTime));
                 canvas.scale(zoom, zoom);
                 canvas.rotate(layer + elapsedTime * (0.5 + layer * 0.1));
-                canvas.fillStyle = RGBA(cast(ubyte)(255 - layer * 32), 
-                                        cast(ubyte)(64 + cast(ubyte)(layer * 16)), 128, 255);
+                canvas.fillStyle = color( 255 - layer * 32, 64 + layer * 16, 128, 255);
 
                 canvas.beginPath();
                     canvas.moveTo(-1, -1);
