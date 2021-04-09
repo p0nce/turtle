@@ -1,5 +1,8 @@
-module main;
-
+#!/usr/bin/env dub
+/+ dub.sdl:
+    name "minimal"
+    dependency "turtle" version="~>0.0"
++/
 import turtle;
 
 int main(string[] args)

@@ -1,7 +1,0 @@
-{
-    "name": "minimal",
-    "dependencies":
-    {
-        "turtle": { "path": "../.." }
-    }
-}
