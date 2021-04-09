@@ -160,8 +160,6 @@ class Graphics : IGraphics, IRenderer
         // Get size of window.
         int w, h;
         SDL_GetRendererOutputSize(_renderer, &w, &h);
-        import std.stdio;
-        writeln(w, " ", h);
 
         if ((_lastKnownWidth != w) || (_lastKnownHeight != h))
         {
