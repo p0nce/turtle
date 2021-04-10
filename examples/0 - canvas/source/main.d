@@ -1,21 +1,21 @@
-#!/usr/bin/env dub
-/+ dub.sdl:
-    name "minimal"
-    dependency "turtle" version="~>0.0"
-+/
 import turtle;
 
 int main(string[] args)
 {
-    runGame(new Minimal);
+    runGame(new CanvasExample);
     return 0;
 }
 
-class Minimal : TurtleGame
+class CanvasExample : TurtleGame
 {
     override void load()
     {
         setBackgroundColor( color("#6A0035") );
+    }
+
+    override void update(double dt)
+    {
+        if (keyboard.isDown("escape")) exitGame;
     }
 
     override void draw()

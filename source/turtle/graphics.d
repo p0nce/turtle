@@ -184,18 +184,39 @@ class Graphics : IGraphics, IRenderer
             _lastKnownHeight = h;
             _buffer.size(w, h);
 
+            fillWithClearColor(clearColor);
+
             _texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
 
         }
 
-        //  clear buffer with clear color
-        for (int y = 0; y < _lastKnownHeight; ++y)
+        if (clearColor.a == 255)
         {
-            RGBA[] scan = _buffer.scanline(y);
-            scan[0.._lastKnownWidth] = clearColor;
+            fillWithClearColor(clearColor);
+        }
+        else
+        {
+            // blend color with previous to make a cheap motion blur
+            for (int y = 0; y < _lastKnownHeight; ++y)
+            {
+                RGBA[] scan = _buffer.scanline(y);
+
+                for (size_t x = 0; x < scan.length; ++x)
+                    scan[x] = blendColor(clearColor, scan[x], clearColor.a);
+            }
         }
         _canvas.initialize(_buffer.toRef());
         return &_canvas;
+    }
+
+    void fillWithClearColor(RGBA clearColor)
+    {
+        // Clear buffer with clear color, even if alpha isn't 255
+        for (int y = 0; y < _lastKnownHeight; ++y)
+        {
+            RGBA[] scan = _buffer.scanline(y);
+            scan[0.._lastKnownWidth] = clearColor; 
+        }
     }
 
     override void getFrameSize(int* width, int* height)
@@ -207,8 +228,9 @@ class Graphics : IGraphics, IRenderer
     /// Mark end of drawing.
     void endFrame()
     {
-        SDL_SetRenderDrawColor( _renderer, 0xff, 0x00, 0xff, 0x00 );
-        SDL_RenderClear(_renderer);
+        // Doesn't seem useful to clear that!
+        //SDL_SetRenderDrawColor( _renderer, 0xff, 0x00, 0xff, 0x00 );
+        //SDL_RenderClear(_renderer);
 
         // Update texture
 
@@ -236,7 +258,7 @@ private:
     SDL_Renderer* _renderer;
     SDL_Texture* _texture;
     Canvas _canvas;
-    OwnedImage!RGBA _buffer;
+    OwnedImage!RGBA _buffer;    
 
     int _lastKnownWidth = 0;
     int _lastKnownHeight = 0;

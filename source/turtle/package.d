@@ -14,5 +14,6 @@ public import turtle.graphics;
 public import turtle.renderer;
 public import turtle.random;
 public import turtle.game;
+public import turtle.keyboard;
 
 

@@ -4,6 +4,7 @@ import bindbc.sdl;
 import dplug.canvas;
 import turtle.graphics;
 import turtle.renderer;
+import turtle.keyboard;
 
 
 /// Inherit from this to make a game.
@@ -37,6 +38,14 @@ protected:
     Canvas* canvas()
     {
         return _frameCanvas;
+    }
+
+    /// Get keyboard API.
+    /// Cannot be called before `load()`.
+    /// Returns: The `Keyboard` object.
+    Keyboard keyboard()
+    {
+        return _keyboard;
     }
 
     /// Width of the window. Can only be used inside a `draw` override.
@@ -83,12 +92,16 @@ private:
 
     RGBA _backgroundColor = RGBA(0, 0, 0, 255);
 
+    Keyboard _keyboard;
+
     void run()
     {
         assert(!_gameShouldExit);
 
+        _keyboard = new Keyboard;
+
         IGraphics graphics = createGraphics();
-        scope(exit) destroy(graphics);
+        scope(exit) destroy(graphics);   
 
         // Load override
         load();
@@ -121,13 +134,10 @@ private:
                         }
 
                     case SDL_KEYDOWN:
-                        {
-                            if (event.key.keysym.sym == SDLK_ESCAPE) // TODO: this should be a callback
-                            {
-                                _gameShouldExit = true;
-                            }
-                            break;
-                        }
+                    case SDL_KEYUP:
+                        updateKeyboard(&event.key);
+                        break;
+
 
                     case SDL_QUIT:
                         _gameShouldExit = true;
@@ -168,6 +178,29 @@ private:
             renderer.endFrame();
         }  
 
+    }
+
+    void updateKeyboard(const(SDL_KeyboardEvent*) event)
+    {
+        // ignore key-repeat
+        if (event.repeat != 0)
+            return;
+
+        switch (event.type)
+        {
+            case SDL_KEYDOWN:
+                assert(event.state == SDL_PRESSED);
+                _keyboard.markKeyAsPressed(event.keysym.scancode);
+                break;
+
+            case SDL_KEYUP:
+                assert(event.state == SDL_RELEASED);
+                _keyboard.markKeyAsReleased(event.keysym.scancode);
+                break;
+
+            default:
+                break;
+        }
     }
 }
 

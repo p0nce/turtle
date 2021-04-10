@@ -1,5 +1,5 @@
 {
-  "name": "minimal",
+  "name": "canvas",
   "targetType": "executable",
   "dependencies": {
     "turtle": { "path": "../.." }
