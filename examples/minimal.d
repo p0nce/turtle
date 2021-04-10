@@ -21,28 +21,29 @@ class Minimal : TurtleGame
     override void draw()
     {
         foreach(layer; 0..8)
-        {
-            canvas.save();
+            with(canvas)
+            {
+                save();
 
-                canvas.translate(windowWidth / 2, windowHeight / 2);
+                translate(windowWidth / 2, windowHeight / 2);
                 float zoom = windowHeight/4 * (1.0 - layer / 7.0) ^^ (1.0 + 0.2 * cos(elapsedTime));
-                canvas.scale(zoom, zoom);
-                canvas.rotate(layer + elapsedTime * (0.5 + layer * 0.1));
-                canvas.fillStyle = color( 255 - layer * 32, 64 + layer * 16, 128, 255);
+                scale(zoom, zoom);
+                rotate(layer + elapsedTime * (0.5 + layer * 0.1));
+                fillStyle = color( 255 - layer * 32, 64 + layer * 16, 128, 255);
 
-                canvas.beginPath();
-                    canvas.moveTo(-1, -1);
-                    canvas.lineTo( 0, -3);
-                    canvas.lineTo(+1, -1);
-                    canvas.lineTo(+3,  0);
-                    canvas.lineTo(+1, +1);
-                    canvas.lineTo( 0, +3);
-                    canvas.lineTo(-1, +1);
-                    canvas.lineTo(-3,  0);
-                canvas.closePath();
-                canvas.fill();
+                beginPath();
+                    moveTo(-1, -1);
+                    lineTo( 0, -3);
+                    lineTo(+1, -1);
+                    lineTo(+3,  0);
+                    lineTo(+1, +1);
+                    lineTo( 0, +3);
+                    lineTo(-1, +1);
+                    lineTo(-3,  0);
+                closePath();
+                fill();
 
-            canvas.restore();
-        }
+                restore();
+            }
     }
 }
