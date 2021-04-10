@@ -467,17 +467,3 @@ private static immutable double[255] LOG_FACTORIAL =
     1156.170837573242400,
 ];
 
-unittest
-{
-    Xorshift32 rng;
-    rng.seed(unpredictableSeed());
-
-    double x = randNormal!Xorshift32(rng, 0.0, 1.0);
-    x = randExponential!Xorshift32();
-    x = randGamma!Xorshift32(rng, 1.2, 1.0);
-    x = randGamma!Xorshift32(rng, 0.8, 2.0);
-    x = randChiSquare!Xorshift32(rng, 2.0);
-    x = randInverseGamma!Xorshift32(rng, 1.1, 0.7);
-    x = randWeibull!Xorshift32(rng, 3.0, 0.7);
-    x = randCauchy!Xorshift32(rng, 5.0, 1.4);
-}
