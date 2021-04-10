@@ -1,0 +1,8 @@
+{
+  "name": "minimal",
+  "targetType": "executable",
+  "dependencies": {
+    "turtle": { "path": "../.." }
+  },
+  "versions": [ "SDL_2010" ]
+}
