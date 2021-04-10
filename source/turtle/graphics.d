@@ -2,6 +2,13 @@
 module turtle.graphics;
 
 import core.stdc.string;
+version(Windows)
+{
+    import core.sys.windows.windef;
+    import core.sys.windows.winuser;
+    import core.sys.windows.winbase;
+}
+
 import std.string;
 
 enum EMULATE_SDL = false;
@@ -84,6 +91,16 @@ class Graphics : IGraphics, IRenderer
             SDL_DestroyRenderer(_renderer);
         }
         SDL_DestroyWindow(_window);
+
+
+        version(Windows)
+        {
+            if (user32_module_ != null) 
+            {
+                FreeLibrary(user32_module_);
+                user32_module_ = null;
+            }
+        }
     }
 
     // IGraphics
@@ -224,6 +241,16 @@ private:
     int _lastKnownWidth = 0;
     int _lastKnownHeight = 0;
 
+    version(Windows)
+    {
+        extern(Windows) 
+        {
+            alias SetProcessDPIAware_t = int function();
+        }
+        HMODULE user32_module_;
+        SetProcessDPIAware_t SetProcessDPIAware_;
+    }
+
     void loadSDLLibrary()
     {
         SDLSupport ret = loadSDL();
@@ -237,31 +264,31 @@ private:
             }
         }
     }
-}
 
-
-
-version(Windows)
-{
-    import core.sys.windows.windef;
-    extern(Windows) int SetProcessDPIAware();
-
-    enum DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4;
-    alias DPI_AWARENESS_CONTEXT = int;
-
-    // new-style API, but not usable yet
-    extern(Windows) BOOL SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT value);
-
-    void makeProcessDPIAware()
+    version(Windows)
     {
-        SetProcessDPIAware();
-        // SDL2 doesn't support the new-style API it seems
-        //SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        void makeProcessDPIAware()
+        {
+            if ((user32_module_ = LoadLibraryA("User32.dll")) != null) 
+            {
+                SetProcessDPIAware_ = cast(SetProcessDPIAware_t) GetProcAddress(user32_module_, "SetProcessDPIAware".ptr);
+
+                // call it
+                SetProcessDPIAware_();
+            }
+        }
+    }
+    else
+    {
+        void makeProcessDPIAware()
+        {
+        }
     }
 }
-else
-{
-    void makeProcessDPIAware()
-    {
-    }
-}
+
+
+
+
+
+
+
