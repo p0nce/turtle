@@ -9,12 +9,20 @@ It depends on SDL for windowing.
 
 ## Example
 
+```json
+// --------------- dub.json ------------------
+{
+    "name": "mygame",
+    "dependencies": {
+        "turtle": "~>0.0"
+    },
+    "versions": [ "SDL_2010" ]
+}
+
+```
+
 ```d
-#!/usr/bin/env dub
-/+ dub.sdl:
-    name "minimal"
-    dependency "turtle" version="~>0.0"
-+/
+// -------------- source/main.d ------------------
 import turtle;
 
 int main(string[] args)
