@@ -59,8 +59,10 @@ package:
         {
             canvas.save;
                 canvas.translate(this2D._position);
-                canvas.scale(this2D._scale);
                 canvas.rotate(this2D._rotation);
+                canvas.scale(this2D._scale);
+
+
                 this2D.draw(canvas);
                 foreach (child; _children)
                     child.doDraw(canvas);

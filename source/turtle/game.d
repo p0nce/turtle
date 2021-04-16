@@ -26,7 +26,10 @@ public:
     }
 
     /// Drawing goes here. Override this function in your game.
-    abstract void draw();
+    void draw()
+    {
+        // by default: do nothing
+    }
 
 
 protected:
