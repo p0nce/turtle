@@ -63,7 +63,7 @@ class Graphics : IGraphics, IRenderer
         SDL_WindowFlags flags = SDL_WINDOW_SHOWN
                               | SDL_WINDOW_RESIZABLE
                               | SDL_WINDOW_MOUSE_FOCUS
-                              | SDL_WINDOW_FULLSCREEN_DESKTOP
+                              //| SDL_WINDOW_FULLSCREEN_DESKTOP
                               | SDL_WINDOW_INPUT_FOCUS;
 
         if (enableHIDPI)
@@ -119,6 +119,16 @@ class Graphics : IGraphics, IRenderer
             // intercept relevant events
             switch(event.type)
             {
+                case SDL_KEYDOWN:
+                {
+                    auto key = event.key.keysym;
+                    if (key.sym == SDLK_RETURN && ((key.mod & KMOD_ALT) != 0))
+                        toggleFullscreen();
+                    else if (key.sym == SDLK_F11)
+                        toggleFullscreen();
+                    break;
+                }
+
                 case SDL_WINDOWEVENT:
                 {
                     uint windowID = getWindowID();
@@ -182,7 +192,12 @@ class Graphics : IGraphics, IRenderer
         {
             _lastKnownWidth = w;
             _lastKnownHeight = h;
-            _buffer.size(w, h);
+
+            int border = 0;
+            int rowAlignment = 1;
+            int xMultiplicity = 1;
+            int trailingSamples = 3; // for dplug:canvas
+            _buffer.size(w, h, border, rowAlignment, xMultiplicity, trailingSamples);
 
             fillWithClearColor(clearColor);
 
@@ -262,6 +277,21 @@ private:
 
     int _lastKnownWidth = 0;
     int _lastKnownHeight = 0;
+
+    bool _isFullscreen = false;
+
+    void toggleFullscreen()
+    {
+        _isFullscreen = !_isFullscreen;
+        if (_isFullscreen)
+        {
+            SDL_SetWindowFullscreen(_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+        }
+        else
+        {
+            SDL_SetWindowFullscreen(_window, 0);
+        }
+    }
 
     version(Windows)
     {

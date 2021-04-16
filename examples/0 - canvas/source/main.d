@@ -29,7 +29,16 @@ class CanvasExample : TurtleGame
                 float zoom = windowHeight/4 * (1.0 - layer / 7.0) ^^ (1.0 + 0.2 * cos(elapsedTime));
                 scale(zoom, zoom);
                 rotate(layer + elapsedTime * (0.5 + layer * 0.1));
-                fillStyle = color( 255 - layer * 32, 64 + layer * 16, 128, 255);
+
+                auto gradient = createCircularGradient(0, 0, 3);
+
+                int r = 255 - layer * 32;
+                int g = 64 + layer * 16;
+                int b = 128;
+                gradient.addColorStop(0, color(r, g, b, 255));
+                gradient.addColorStop(1, color(r/2, g/3, b/2, 255));
+
+                fillStyle = gradient;
 
                 beginPath();
                     moveTo(-1, -1);
