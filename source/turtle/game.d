@@ -5,12 +5,14 @@ import dplug.canvas;
 import turtle.graphics;
 import turtle.renderer;
 import turtle.keyboard;
+import turtle.node2d;
 
 
 /// Inherit from this to make a game.
 class TurtleGame
 {
 public:
+    
     /// Initialization go here. Override this function in your game.
     /// By default: do nothing.
     void load()
@@ -77,6 +79,11 @@ protected:
         _backgroundColor = color;
     }
 
+    Node root()
+    {
+        return _root;
+    }
+
     // </API>
 
 private:
@@ -94,11 +101,14 @@ private:
 
     Keyboard _keyboard;
 
+    Node _root; // root of the scene
+
     void run()
     {
         assert(!_gameShouldExit);
 
         _keyboard = new Keyboard;
+        _root = new Node;
 
         IGraphics graphics = createGraphics();
         scope(exit) destroy(graphics);   
@@ -160,6 +170,7 @@ private:
 
             // Update override
             update(_deltaTime);
+            root.doUpdate(_deltaTime);
 
             IRenderer renderer = graphics.getRenderer();
 
@@ -173,6 +184,7 @@ private:
             _windowHeight = height;
 
             // Draw override
+            root.doDraw(canvas);
             draw();
             _frameCanvas = null;
             renderer.endFrame();

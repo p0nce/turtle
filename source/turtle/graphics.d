@@ -289,7 +289,7 @@ private:
         }
         else
         {
-            SDL_SetWindowFullscreen(_window, 0);
+            SDL_SetWindowFullscreen(_window, cast(SDL_WindowFlags)0);
         }
     }
 
