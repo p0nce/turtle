@@ -6,7 +6,8 @@ import turtle.graphics;
 import turtle.renderer;
 import turtle.keyboard;
 import turtle.node2d;
-
+import dchip.cpSpace;
+import dchip.cpSpaceStep;
 
 /// Inherit from this to make a game.
 class TurtleGame
@@ -106,12 +107,18 @@ private:
 
     Node _root; // root of the scene
 
+    cpSpace* _space;
+
+    double _physicsAccum = 0.0;
+
     void run()
     {
         assert(!_gameShouldExit);
 
         _keyboard = new Keyboard;
         _root = new Node;
+
+        _space = cpSpaceNew();
 
         IGraphics graphics = createGraphics();
         scope(exit) destroy(graphics);   
@@ -172,6 +179,7 @@ private:
             _elapsedTime += _deltaTime;            
 
             // Update override
+            updatePhysics(_deltaTime);
             update(_deltaTime);
             root.doUpdate(_deltaTime);
 
@@ -191,7 +199,20 @@ private:
             draw();
             _frameCanvas = null;
             renderer.endFrame();
-        }  
+        } 
+
+        cpSpaceFree(_space);
+    }
+
+    void updatePhysics(double dt)
+    {
+        enum PHYSICS_DT = 0.010f;
+        _physicsAccum += dt;
+        while( _physicsAccum > PHYSICS_DT )
+        {
+            cpSpaceStep(_space, PHYSICS_DT);
+            _physicsAccum -= PHYSICS_DT;
+        }
 
     }
 
