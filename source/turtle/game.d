@@ -78,11 +78,13 @@ protected:
         _gameShouldExit = true;
     }
 
+    /// Changes the clear color to fill the screen with.
     void setBackgroundColor(RGBA color)
     {
         _backgroundColor = color;
     }
 
+    /// Root of the scene.
     Node root()
     {
         return _root;
