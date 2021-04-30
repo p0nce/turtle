@@ -35,27 +35,66 @@ class RawRenderExample : TurtleGame
         int H = framebuf.h;
 
 
-        vec3f eye    = vec3f(0, 0, 10.0f);
-        vec3f target = vec3f(0, 0, 0.0f);
-        vec3f up     = vec3f(0, 1.0f, 0.0f);
+
+
+
+        // Note: there is no difference between object-space and world-space.
+        //       the camera is rotating around a model who have no matrix.
+        RGBA rayMarch(vec3f rayOrigin, vec3f rayDirection)
+        {
+            int far = 20;
+            RGBA result = RGBA(0, 0, 0, 0);
+            for (int n = far; n >= 0; --n)
+            {
+                vec3f pos = rayOrigin + rayDirection * n;
+
+                int ix = cast(int)(pos.x + 1);
+                int iy = cast(int)(pos.y + 1);
+                int iz = cast(int)(pos.z + 1);
+
+                bool hit = true;
+                if (ix <= 0) hit = false;
+                else if (iy <= 0) hit = false;
+                else if (iz <= 0) hit = false;
+                ix -= 1;
+                iy -= 1;
+                iz -= 1;
+                if (ix >= _model.width) hit = false;
+                else if (iy >= _model.height) hit = false;
+                else if (iz >= _model.depth) hit = false;
+                if (!hit)
+                    continue;
+
+                VoxColor color = _model.voxel(ix, iy, iz);
+                RGBA rgba = RGBA(color.r, color.g, color.b, color.a);
+                result = blendColor(rgba, result, rgba.a);
+            }
+            return result;
+        }
+
+        // Compute camera rays
+        
+        vec3f target = vec3f(_model.width*0.5f, _model.height*0.5f, _model.depth*0.5f);
+        vec3f eye    = target + vec3f(sin(elapsedTime)*12.0f, -cos(elapsedTime)*12.0f, 0.0f);
+        vec3f up     = vec3f(0, 0.0f, 1.0f);
         vec3f right  = vec3f(1.0f, 0.0f, 0.0f);
+
+        vec3f camZ = (eye - target).normalized();
+        vec3f camX = cross(-up, camZ).normalized();
+        vec3f camY = cross(camZ, -camX);
 
         for (int y = 0; y < H; ++y)
         {
+            RGBA[] scan = framebuf.scanline(y);
+
             for (int x = 0; x < W; ++x)
             {
                 float dx = (x - (W-1)*0.5f) / (W*0.5f);
                 float dy = (y - (H-1)*0.5f) / (H*0.5f);
                 vec3f rayOrigin = eye;
-                vec3f rayDirection = (target - eye) + 20 * dx * right + 20 * dy * -up;
+                vec3f rayDirection = -camZ + 2* camX * dx - 2* camY * dy;
                 rayDirection.normalize();
-
-
-
-
-
-
-
+                scan[x] = rayMarch(rayOrigin, rayDirection);
             }
         }
     }        
@@ -63,7 +102,5 @@ class RawRenderExample : TurtleGame
 private:
     float angleX = 0;
     float angleZ = 0;
-
     VOX _model;
 }
-
