@@ -26,7 +26,7 @@ public:
     {
     }
 
-    /// Drawing goes here. Override this function in your game.
+    /// Drawing with a canvas goes here. Override this function in your game.
     void draw()
     {
         // by default: do nothing
@@ -44,6 +44,13 @@ protected:
     Canvas* canvas()
     {
         return _frameCanvas;
+    }
+
+    /// Returns: An ImageRef!RGBA spanning the whole screen.
+    //           This call can only be made inside a `draw` override.
+    ImageRef!RGBA framebuffer()
+    {
+        return _framebuffer;
     }
 
     /// Get keyboard API.
@@ -94,6 +101,7 @@ protected:
 
 private:
     Canvas* _frameCanvas = null;
+    ImageRef!RGBA _framebuffer;
     float _windowWidth = 0.0f, 
           _windowHeight = 0.0f;
 
@@ -187,7 +195,8 @@ private:
 
             IRenderer renderer = graphics.getRenderer();
 
-            Canvas* canvas = renderer.beginFrame(_backgroundColor);
+            Canvas* canvas;
+            renderer.beginFrame(_backgroundColor, &canvas, &_framebuffer);
 
             int width, height;
             renderer.getFrameSize(&width, &height);
@@ -196,10 +205,11 @@ private:
             _windowWidth = width;
             _windowHeight = height;
 
-            // Draw override
-            root.doDraw(canvas);
-            draw();
+            // Draw overrides
+            root.doDraw(canvas);                 // 1. draw scene objects.
+            draw();                              // 2. draw with canvas and framebuffer directly.
             _frameCanvas = null;
+            _framebuffer = ImageRef!RGBA.init;
             renderer.endFrame();
         } 
 

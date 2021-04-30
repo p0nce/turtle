@@ -181,7 +181,7 @@ class Graphics : IGraphics, IRenderer
     // IRenderer
 
     /// Start drawing, return a Canvas initialized to the drawing area.
-    override Canvas* beginFrame(RGBA clearColor)
+    override void beginFrame(RGBA clearColor, Canvas** canvas, ImageRef!RGBA* framebuffer)
     {
  
         // Get size of window.
@@ -221,7 +221,8 @@ class Graphics : IGraphics, IRenderer
             }
         }
         _canvas.initialize(_buffer.toRef());
-        return &_canvas;
+        *canvas = &_canvas;
+        *framebuffer = _buffer.toRef();
     }
 
     void fillWithClearColor(RGBA clearColor)

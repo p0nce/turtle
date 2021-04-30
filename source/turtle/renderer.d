@@ -3,11 +3,12 @@ module turtle.renderer;
 
 public import dplug.canvas;
 public import dplug.graphics.color;
+public import dplug.graphics.image;
 
 interface IRenderer
 {
-	/// Start drawing, return a Canvas.
-    Canvas* beginFrame(RGBA clearColor);
+	/// Start drawing, return a Canvas and a framebuffer.
+    void beginFrame(RGBA clearColor, Canvas** canvas, ImageRef!RGBA* framebuffer);
 
     /// Mark end of drawing.
     void endFrame();
