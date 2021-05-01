@@ -104,7 +104,8 @@ nothrow:
 
 @nogc bool intersectVOX(Ray ray, VOX* vox, 
                         out float t, 
-                        out vec3i index) nothrow
+                        out vec3i index,
+                        ref Vec!vec3i visitedVoxels) nothrow
 {    
     int W = vox.width;
     int He = vox.height;
@@ -136,13 +137,13 @@ nothrow:
 
         enum int POSX = 0, NEGX = 1, POSY = 2, NEGY = 3, POSZ = 4, NEGZ = 5;
         bool[6] hit;
-        float[6] distance = [float.infinity,float.infinity,float.infinity,float.infinity,float.infinity,float.infinity];
+        float[6] distance = [FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX];
         hit[POSX] = ray.intersectQuad(B, D, F, distance[POSX], tmp_u, tmp_v);
         hit[NEGX] = ray.intersectQuad(A, C, E, distance[NEGX], tmp_u, tmp_v);
-        hit[POSY] = ray.intersectQuad(C, D, H, distance[POSY], tmp_u, tmp_v);
-        hit[NEGY] = ray.intersectQuad(A, E, F, distance[NEGY], tmp_u, tmp_v);
-        hit[POSZ] = ray.intersectQuad(E, F, H, distance[POSZ], tmp_u, tmp_v);
-        hit[NEGZ] = ray.intersectQuad(A, B, C, distance[NEGZ], tmp_u, tmp_v);
+        hit[POSY] = ray.intersectQuad(D, C, H, distance[POSY], tmp_u, tmp_v);
+        hit[NEGY] = ray.intersectQuad(A, B, E, distance[NEGY], tmp_u, tmp_v);
+        hit[POSZ] = ray.intersectQuad(F, H, E, distance[POSZ], tmp_u, tmp_v);
+        hit[NEGZ] = ray.intersectQuad(A, C, B, distance[NEGZ], tmp_u, tmp_v);
 
 
         // find the shortest 2 distances
@@ -168,7 +169,7 @@ nothrow:
             }
         }
 
-        if (numHits != 2)
+        if (numHits < 2)//!= 2)
             return false; // degenerate case, don't bother
         assert(isFinite(shortestDist));
         assert(isFinite(shortestDist2));
@@ -177,7 +178,6 @@ nothrow:
         vec3f pointExit = ray.progress(shortestDist2); 
         
 
-        Vec!vec3i visitedVoxels;
         voxelTraversal(pointEntry, pointExit, vox, visitedVoxels);
 
         foreach(vec3i ind; visitedVoxels[])
@@ -213,20 +213,19 @@ void voxelTraversal(vec3f rayStart,
 {
     visitedVoxels.clearContents();
 
-    float _bin_size = 1.0f;
 
     // This id of the first/current voxel hit by the ray.
     // Using floor (round down) is actually very important,
     // the implicit int-casting will round up for negative numbers.
-    vec3i current_voxel = vec3i( cast(int)(rayStart.x/_bin_size),
-                                 cast(int)(rayStart.y/_bin_size),
-                                 cast(int)(rayStart.z/_bin_size) );
+    vec3i current_voxel = vec3i( cast(int)fast_floor(rayStart.x),
+                                 cast(int)fast_floor(rayStart.y),
+                                 cast(int)fast_floor(rayStart.z) );
 
     // The id of the last voxel hit by the ray.
     // TODO: what happens if the end point is on a border?
-    vec3i last_voxel = vec3i( cast(int)(rayEnd.x/_bin_size),
-                              cast(int)(rayEnd.y/_bin_size),
-                              cast(int)(rayEnd.z/_bin_size) );
+    vec3i last_voxel = vec3i( cast(int)fast_floor(rayEnd.x),
+                              cast(int)fast_floor(rayEnd.y),
+                              cast(int)fast_floor(rayEnd.z) );
 
     static bool validCoord(VOX* vox, vec3i ind)
     {
@@ -241,24 +240,26 @@ void voxelTraversal(vec3f rayStart,
     immutable int stepY = (ray[1] >= 0) ? 1:-1; // correct
     immutable int stepZ = (ray[2] >= 0) ? 1:-1; // correct
 
+    alias FloatP = double;
+
     // Distance along the ray to the next voxel border from the current position (tMaxX, tMaxY, tMaxZ).
-    double next_voxel_boundary_x = (current_voxel[0]+stepX)*_bin_size; // correct
-    double next_voxel_boundary_y = (current_voxel[1]+stepY)*_bin_size; // correct
-    double next_voxel_boundary_z = (current_voxel[2]+stepZ)*_bin_size; // correct
+    FloatP next_voxel_boundary_x = (current_voxel[0]+stepX); // correct
+    FloatP next_voxel_boundary_y = (current_voxel[1]+stepY); // correct
+    FloatP next_voxel_boundary_z = (current_voxel[2]+stepZ); // correct
 
     // tMaxX, tMaxY, tMaxZ -- distance until next intersection with voxel-border
     // the value of t at which the ray crosses the first vertical voxel boundary
-    double tMaxX = (ray[0]!=0) ? (next_voxel_boundary_x - rayStart[0])/ray[0] : DBL_MAX; //
-    double tMaxY = (ray[1]!=0) ? (next_voxel_boundary_y - rayStart[1])/ray[1] : DBL_MAX; //
-    double tMaxZ = (ray[2]!=0) ? (next_voxel_boundary_z - rayStart[2])/ray[2] : DBL_MAX; //
+    FloatP tMaxX = (ray[0]!=0) ? (next_voxel_boundary_x - rayStart[0])/ray[0] : FloatP.max;
+    FloatP tMaxY = (ray[1]!=0) ? (next_voxel_boundary_y - rayStart[1])/ray[1] : FloatP.max;
+    FloatP tMaxZ = (ray[2]!=0) ? (next_voxel_boundary_z - rayStart[2])/ray[2] : FloatP.max;
 
     // tDeltaX, tDeltaY, tDeltaZ --
     // how far along the ray we must move for the horizontal component to equal the width of a voxel
     // the direction in which we traverse the grid
     // can only be FLT_MAX if we never go in that direction
-    double tDeltaX = (ray[0]!=0) ? _bin_size/ray[0]*stepX : DBL_MAX;
-    double tDeltaY = (ray[1]!=0) ? _bin_size/ray[1]*stepY : DBL_MAX;
-    double tDeltaZ = (ray[2]!=0) ? _bin_size/ray[2]*stepZ : DBL_MAX;
+    FloatP tDeltaX = (ray[0]!=0) ? 1.0f/ray[0]*stepX : FloatP.max;
+    FloatP tDeltaY = (ray[1]!=0) ? 1.0f/ray[1]*stepY : FloatP.max;
+    FloatP tDeltaZ = (ray[2]!=0) ? 1.0f/ray[2]*stepZ : FloatP.max;
 
     vec3i diff = vec3i(0,0,0);
     bool neg_ray=false;
@@ -307,7 +308,7 @@ void voxelTraversal(vec3f rayStart,
         }
         if (validCoord(vox, current_voxel))
             visitedVoxels.pushBack(current_voxel);
-        else if (iter > 0)
+        else if (iter > 3)
         {
             break;
         }
