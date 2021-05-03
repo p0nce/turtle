@@ -1,6 +1,7 @@
 module ray;
 
 import core.stdc.float_;
+import inteli;
 import std.math;
 import dplug.math;
 import dplug.core;
@@ -58,7 +59,7 @@ nothrow:
             t = dot(edge2, qvec) * invDet;
             return true;
         }
-
+/*
         /// Ray vs quad intersection.
         /// See_also: "Fast, Minimum Storage Ray/Triangle intersection", Mommer & Trumbore (1997)
         /// Returns: Barycentric coordinates, the intersection point is at $(D (1 - u - v) * A + u * B + v * C).
@@ -69,6 +70,7 @@ nothrow:
         ///  |           |
         ///  C---------(C+B-A)
         ///
+        /// Taking 4D vectors instead
         @nogc bool intersectQuad(vec3f A, vec3f B, vec3f C, out T t, out T u, out T v) pure const nothrow
         {
             point_t edge1 = B - A;
@@ -98,7 +100,7 @@ nothrow:
             // calculate t, ray intersects triangle
             t = dot(edge2, qvec) * invDet;
             return true;
-        }
+        }*/
     }
 }
 
@@ -113,18 +115,18 @@ nothrow:
 
     float t_entry;
 
-    vec3f A = vec3f(0, 0, 0);
-    vec3f B = vec3f(W, 0, 0);
-    vec3f C = vec3f(0, He, 0);
-    vec3f D = vec3f(W, He, 0);
+    vec4f A = vec4f(0, 0, 0,0);
+    vec4f B = vec4f(W, 0, 0,0);
+    vec4f C = vec4f(0, He, 0,0);
+    vec4f D = vec4f(W, He, 0,0);
 
-    vec3f E = vec3f(0, 0, De);
-    vec3f F = vec3f(W, 0, De);
-    vec3f G = vec3f(0, He, De);
-    vec3f H = vec3f(W, He, De);
+    vec4f E = vec4f(0, 0, De,0);
+    vec4f F = vec4f(W, 0, De,0);
+    vec4f G = vec4f(0, He, De,0);
+    vec4f H = vec4f(W, He, De,0);
 
     // Is the ray inside the VOX?
-    if (box3f(A, H).contains(ray.orig))
+    if (box3f(vec3f(0, 0, 0), vec3f(W, He, De)).contains(ray.orig))
     {
         return false; // Do not manage this case
     }
@@ -136,14 +138,27 @@ nothrow:
         float tmp_u, tmp_v;
 
         enum int POSX = 0, NEGX = 1, POSY = 2, NEGY = 3, POSZ = 4, NEGZ = 5;
+
+        bool[6] shouldTest;
         bool[6] hit;
         float[6] distance = [FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX];
-        hit[POSX] = ray.intersectQuad(B, D, F, distance[POSX], tmp_u, tmp_v);
-        hit[NEGX] = ray.intersectQuad(A, C, E, distance[NEGX], tmp_u, tmp_v);
-        hit[POSY] = ray.intersectQuad(D, C, H, distance[POSY], tmp_u, tmp_v);
-        hit[NEGY] = ray.intersectQuad(A, B, E, distance[NEGY], tmp_u, tmp_v);
-        hit[POSZ] = ray.intersectQuad(F, H, E, distance[POSZ], tmp_u, tmp_v);
-        hit[NEGZ] = ray.intersectQuad(A, C, B, distance[NEGZ], tmp_u, tmp_v);
+
+        vec4f rayDir = vec4f(ray.dir.x, ray.dir.y, ray.dir.z, 0.0f);
+        vec4f rayOrig = vec4f(ray.orig.x, ray.orig.y, ray.orig.z, 0.0f);
+
+        shouldTest[POSX] = (ray.orig.x > vox.width)  ^ (ray.dir.x >= 0);
+        shouldTest[NEGX] = (ray.orig.x < 0)          ^ (ray.dir.x <= 0);
+        shouldTest[POSY] = (ray.orig.y > vox.height) ^ (ray.dir.y >= 0);
+        shouldTest[NEGY] = (ray.orig.y < 0)          ^ (ray.dir.y <= 0);
+        shouldTest[POSZ] = (ray.orig.z > vox.depth)  ^ (ray.dir.z >= 0);
+        shouldTest[NEGZ] = (ray.orig.z < 0)          ^ (ray.dir.z <= 0);
+
+        if (shouldTest[POSX]) hit[POSX] = _mm_intersectQuad(rayOrig, rayDir, B, D, F, distance[POSX], tmp_u, tmp_v);
+        if (shouldTest[NEGX]) hit[NEGX] = _mm_intersectQuad(rayOrig, rayDir, A, C, E, distance[NEGX], tmp_u, tmp_v);
+        if (shouldTest[POSY]) hit[POSY] = _mm_intersectQuad(rayOrig, rayDir, D, C, H, distance[POSY], tmp_u, tmp_v);
+        if (shouldTest[NEGY]) hit[NEGY] = _mm_intersectQuad(rayOrig, rayDir, A, B, E, distance[NEGY], tmp_u, tmp_v);
+        if (shouldTest[POSZ]) hit[POSZ] = _mm_intersectQuad(rayOrig, rayDir, F, H, E, distance[POSZ], tmp_u, tmp_v);
+        if (shouldTest[NEGZ]) hit[NEGZ] = _mm_intersectQuad(rayOrig, rayDir, A, C, B, distance[NEGZ], tmp_u, tmp_v);
 
 
         // find the shortest 2 distances
@@ -173,6 +188,9 @@ nothrow:
             return false; // degenerate case, don't bother
         assert(isFinite(shortestDist));
         assert(isFinite(shortestDist2));
+
+        shortestDist += 1e-6f;
+        shortestDist2 -= 1e-6f;
 
         vec3f pointEntry = ray.progress(shortestDist);
         vec3f pointExit = ray.progress(shortestDist2); 
@@ -314,4 +332,62 @@ void voxelTraversal(vec3f rayStart,
         }
         iter++;
     }
+}
+
+
+@nogc bool _mm_intersectQuad(vec4f orig,
+                             vec4f dir, 
+                             vec4f A, vec4f B, vec4f C, out float t, out float u, out float v) pure nothrow
+{
+    __m128 mmA = _mm_loadu_ps(A.ptr);
+    __m128 mmB = _mm_loadu_ps(B.ptr);
+    __m128 mmC = _mm_loadu_ps(C.ptr);
+    __m128 mmOrig = _mm_loadu_ps(orig.ptr);
+    __m128 mmDir = _mm_loadu_ps(dir.ptr);
+    __m128 edge1 = mmB - mmA;
+    __m128 edge2 = mmC - mmA;
+    __m128 mmpvec = _mm_crossproduct_ps(mmDir, edge2);
+
+    float det = _mm_dot_ps(edge1, mmpvec);
+    if (fast_fabs(det) < float.epsilon)
+        return false; // no intersection
+
+    float invDet = 1 / det;
+
+    // calculate distance from triangle.a to ray origin
+    __m128 tvec = mmOrig - mmA;
+
+    // calculate U parameter and test bounds
+    u = _mm_dot_ps(tvec, mmpvec) * invDet;
+    if (u < 0 || u > 1)
+        return false;
+
+    // prepare to test V parameter
+    __m128 qvec = _mm_crossproduct_ps(tvec, edge1);
+
+    // calculate V parameter and test bounds
+    v = _mm_dot_ps(mmDir, qvec) * invDet;
+    if (v < 0.0 || v > 1.0)
+        return false;
+
+    // calculate t, ray intersects triangle
+    t = _mm_dot_ps(edge2, qvec) * invDet;
+    return true;
+}
+
+// Note: .w element is undefined
+package __m128 _mm_crossproduct_ps(__m128 a, __m128 b) pure nothrow @nogc
+{
+    enum ubyte SHUF1 = _MM_SHUFFLE(3, 0, 2, 1);
+    enum ubyte SHUF2 = _MM_SHUFFLE(3, 1, 0, 2);
+    return _mm_sub_ps(
+                      _mm_mul_ps(_mm_shuffle_ps!SHUF1(a, a), _mm_shuffle_ps!SHUF2(b, b)), 
+                      _mm_mul_ps(_mm_shuffle_ps!SHUF2(a, a), _mm_shuffle_ps!SHUF1(b, b))
+                      );
+}
+
+package float _mm_dot_ps(__m128 a, __m128 b) pure nothrow @nogc
+{
+    __m128 m = a * b;
+    return m.array[0] + m.array[1] + m.array[2] + m.array[3];
 }
