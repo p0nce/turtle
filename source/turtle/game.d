@@ -32,6 +32,12 @@ public:
         // by default: do nothing
     }
 
+    /// Called whenever the window is resized. Override this function in your game.
+    void resized(float width, float height)
+    {
+        // by default: do nothing
+    }
+
 
 protected:
 
@@ -91,6 +97,12 @@ protected:
         _backgroundColor = color;
     }
 
+    /// Changes the title of the window.
+    void setTitle(const(char)[] title)
+    {
+        _graphics.setTitle(title);
+    }
+
     /// Root of the scene.
     Node root()
     {
@@ -121,6 +133,8 @@ private:
 
     double _physicsAccum = 0.0;
 
+    IGraphics _graphics;
+
     void run()
     {
         assert(!_gameShouldExit);
@@ -130,24 +144,24 @@ private:
 
         _space = cpSpaceNew();
 
-        IGraphics graphics = createGraphics();
-        scope(exit) destroy(graphics);   
+        _graphics = createGraphics();
+        scope(exit) destroy(_graphics);   
 
         // Load override
         load();
 
-        uint ticks = graphics.getTicks(); 
+        uint ticks = _graphics.getTicks(); 
 
         while(!_gameShouldExit)
         {
             SDL_Event event;
-            while(graphics.nextEvent(&event))
+            while(_graphics.nextEvent(&event))
             {
                 switch(event.type)
                 {
                     case SDL_WINDOWEVENT:
                         {
-                            uint windowID = graphics.getWindowID();
+                            uint windowID = _graphics.getWindowID();
                             if (event.window.windowID != windowID)  
                                 continue;
 
@@ -177,7 +191,7 @@ private:
                 }
             }
 
-            uint now = graphics.getTicks();
+            uint now = _graphics.getTicks();
             uint ticksDiff = now - ticks; // TODO: this will roll over
 
             _ticksSinceBeginning += ticksDiff;
@@ -193,7 +207,7 @@ private:
             update(_deltaTime);
             root.doUpdate(_deltaTime);
 
-            IRenderer renderer = graphics.getRenderer();
+            IRenderer renderer = _graphics.getRenderer();
 
             Canvas* canvas;
             renderer.beginFrame(_backgroundColor, &canvas, &_framebuffer);
@@ -202,8 +216,13 @@ private:
             renderer.getFrameSize(&width, &height);
 
             _frameCanvas = canvas;
-            _windowWidth = width;
-            _windowHeight = height;
+
+            if (_windowWidth != width || _windowHeight != height)
+            {
+                _windowWidth = width;
+                _windowHeight = height;
+                resized(_windowWidth, _windowHeight);
+            }
 
             // Draw overrides
             root.doDraw(canvas);                 // 1. draw scene objects.

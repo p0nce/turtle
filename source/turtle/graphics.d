@@ -39,7 +39,7 @@ interface IGraphics
 
     uint getWindowID();
 
-    void setTitle(string title);
+    void setTitle(const(char)[] title);
 }
 
 enum RENDERER = true;
@@ -69,7 +69,7 @@ class Graphics : IGraphics, IRenderer
         if (enableHIDPI)
             flags |= SDL_WINDOW_ALLOW_HIGHDPI;
 
-        _window = SDL_CreateWindow("v2d", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, flags);
+        _window = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1440, 1024, flags);
 
         if (RENDERER)
         {
@@ -105,7 +105,7 @@ class Graphics : IGraphics, IRenderer
 
     // IGraphics
 
-    override void setTitle(string title)
+    override void setTitle(const(char)[] title)
     {
         SDL_SetWindowTitle(_window, toStringz(title));
     }
