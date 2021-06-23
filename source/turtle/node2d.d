@@ -26,6 +26,7 @@ public:
 
     void addChild(Node node)
     {
+        node._parent = this;
         _children ~= node;
     }
 
@@ -48,6 +49,11 @@ public:
 
     void update(double deltaTime)
     {
+    }
+
+    Node[] getChildren()
+    {
+        return _children;
     }
 
 package:

@@ -5,6 +5,7 @@ import dplug.canvas;
 import turtle.graphics;
 import turtle.renderer;
 import turtle.keyboard;
+import turtle.mouse;
 import turtle.node2d;
 import dchip.cpSpace;
 import dchip.cpSpaceStep;
@@ -38,6 +39,24 @@ public:
         // by default: do nothing
     }
 
+    // TODO: merge touch and mouse events, so that touchscreen is supported by default
+    // and mouse is just one-finger
+
+    /// Callback function triggered when the mouse is moved.
+    void mouseMoved(float x, float y, float dx, float dy)
+    {
+    }
+
+    /// Callback function triggered when a mouse button is pressed.
+    void mousePressed(float x, float y, MouseButton button, int repeat)
+    {
+    }
+
+    /// Callback function triggered when a mouse button is released.
+    void mouseReleased(float x, float y, MouseButton button)
+    {
+    }
+
 
 protected:
 
@@ -65,6 +84,14 @@ protected:
     Keyboard keyboard()
     {
         return _keyboard;
+    }
+
+    /// Get mouse API.
+    /// Cannot be called before `load()`.
+    /// Returns: The `Mouse` object.
+    Mouse mouse()
+    {
+        return _mouse;
     }
 
     /// Width of the window. Can only be used inside a `draw` override.
@@ -126,6 +153,7 @@ private:
     RGBA _backgroundColor = RGBA(0, 0, 0, 255);
 
     Keyboard _keyboard;
+    Mouse _mouse;
 
     Node _root; // root of the scene
 
@@ -140,6 +168,7 @@ private:
         assert(!_gameShouldExit);
 
         _keyboard = new Keyboard;
+        _mouse = new Mouse;
         _root = new Node;
 
         _space = cpSpaceNew();
@@ -182,6 +211,40 @@ private:
                         updateKeyboard(&event.key);
                         break;
 
+                    case SDL_MOUSEMOTION:
+                    {
+                        SDL_MouseMotionEvent* mevent = &event.motion;
+                        _mouse._x = mevent.x;
+                        _mouse._y = mevent.y;
+                        mouseMoved(mevent.x, mevent.y, mevent.xrel, mevent.yrel);
+                        break;
+                    }
+
+                    case SDL_MOUSEBUTTONUP:
+                    case SDL_MOUSEBUTTONDOWN:
+                    {
+                        SDL_MouseButtonEvent* mevent = &event.button;
+                        _mouse._x = mevent.x;
+                        _mouse._y = mevent.y;
+                        if (mevent.button < 0 || mevent.button > 5) 
+                            goto default;
+                        MouseButton button = convertSDLButtonToMouseButton(mevent.button);
+
+                        if (event.type == SDL_MOUSEBUTTONDOWN)
+                        {
+                            mousePressed(mevent.x, mevent.y, button, mevent.clicks);
+                        }
+                        else
+                            mouseReleased(mevent.x, mevent.y, button);
+                        break;
+                    }
+          /*
+                    case SDL_MOUSEWHEEL:
+                    {
+
+                        break;
+                    }
+*/
 
                     case SDL_QUIT:
                         _gameShouldExit = true;
@@ -276,4 +339,19 @@ void runGame(TurtleGame game)
 {
     game.run();
     destroy(game);
+}
+
+
+MouseButton convertSDLButtonToMouseButton(int button)
+{
+    switch(button)
+    {
+        case SDL_BUTTON_LEFT: return MouseButton.left;
+        case SDL_BUTTON_RIGHT: return MouseButton.right;
+        case SDL_BUTTON_X1: return MouseButton.x1;
+        case SDL_BUTTON_X2: return MouseButton.x2;
+        case SDL_BUTTON_MIDDLE: return MouseButton.middle;
+        default:
+            assert(false);
+    }
 }
