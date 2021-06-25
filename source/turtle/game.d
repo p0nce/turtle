@@ -288,8 +288,7 @@ private:
             }
 
             // Draw overrides
-            root.doDraw(canvas);                 // 1. draw scene objects.
-            draw();                              // 2. draw with canvas and framebuffer directly.
+            draw();
             _frameCanvas = null;
             _framebuffer = ImageRef!RGBA.init;
             renderer.endFrame();

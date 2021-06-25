@@ -24,10 +24,12 @@ public:
         return _parent;
     }
 
-    void addChild(Node node)
+    /// Add child. Return parent for chaining.
+    Node addChild(Node node)
     {
         node._parent = this;
         _children ~= node;
+        return this;
     }
 
     /// Removes a child node. The node is NOT deleted and must be deleted manually.
@@ -56,31 +58,34 @@ public:
         return _children;
     }
 
-package:
-
-    final void doDraw(Canvas* canvas)
+    /// Draw Node and its children on this canvas.
+    /// This call their `draw()` methods recursively, using each `Node2D` transform.
+    /// Usually you would take the one returned by the `Game.canvas()` call.
+    void drawOnCanvas(Canvas* canvas)
     {
         Node2D this2D = cast(Node2D)this;
         if (this2D) 
         {
             canvas.save;
-                canvas.translate(this2D._position);
-                canvas.rotate(this2D._rotation);
-                canvas.scale(this2D._scale);
+            canvas.translate(this2D._position);
+            canvas.rotate(this2D._rotation);
+            canvas.scale(this2D._scale);
 
 
-                this2D.draw(canvas);
-                foreach (child; _children)
-                    child.doDraw(canvas);
+            this2D.draw(canvas);
+            foreach (child; _children)
+                child.drawOnCanvas(canvas);
             canvas.restore;
         }
         else
         {
             foreach (child; _children)
-                child.doDraw(canvas);
+                child.drawOnCanvas(canvas);
         }
 
     }
+
+package:  
 
     final void doUpdate(double deltaTime)
     {
