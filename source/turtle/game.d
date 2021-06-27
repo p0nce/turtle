@@ -57,6 +57,11 @@ public:
     {
     }
 
+    /// Callback function triggered when a mouse wheel is turned.
+    void mouseWheel(float wheelX, float wheelY)
+    {
+    }
+
 
 protected:
 
@@ -238,13 +243,13 @@ private:
                             mouseReleased(mevent.x, mevent.y, button);
                         break;
                     }
-          /*
+
                     case SDL_MOUSEWHEEL:
                     {
-
+                        SDL_MouseWheelEvent* wevent = &event.wheel;
+                        mouseWheel(wevent.x, wevent.y);
                         break;
                     }
-*/
 
                     case SDL_QUIT:
                         _gameShouldExit = true;

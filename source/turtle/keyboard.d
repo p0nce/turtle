@@ -67,5 +67,6 @@ static immutable KeyData[] allKeys =
     KeyData("left", SDLK_LEFT),
     KeyData("right", SDLK_RIGHT),
     KeyData("up", SDLK_UP),
-    KeyData("down", SDLK_DOWN)
+    KeyData("down", SDLK_DOWN),
+    KeyData("space", SDLK_SPACE)
 ];
