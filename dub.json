@@ -11,8 +11,8 @@
     "dependencies": 
     {
         "bindbc-sdl": "~>0.0",
-        "dplug:math": "~>11.0",
-        "dplug:canvas": "~>11.0"
+        "dplug:math": "~>12.0",
+        "dplug:canvas": "~>12.0"
     },
 
     "versions": ["SDL_2010"]
