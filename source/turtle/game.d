@@ -237,10 +237,14 @@ private:
 
                         if (event.type == SDL_MOUSEBUTTONDOWN)
                         {
+                            _mouse.markAsPressed(button);
                             mousePressed(mevent.x, mevent.y, button, mevent.clicks);
                         }
                         else
+                        {
+                            _mouse.markAsReleased(button);
                             mouseReleased(mevent.x, mevent.y, button);
+                        }
                         break;
                     }
 

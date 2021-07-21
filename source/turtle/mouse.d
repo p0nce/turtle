@@ -33,6 +33,24 @@ class Mouse
         return _y;
     }
 
+    /// Returns: `true` if the button is currently pressed.
+    bool isPressed(MouseButton button)
+    {
+        return pressed[button];
+    }
+
 package:
     float _x, _y;
+
+    void markAsPressed(MouseButton button)
+    {
+        pressed[button] = true;
+    }
+
+    void markAsReleased(MouseButton button)
+    {
+        pressed[button] = false;
+    }
+
+    bool[MouseButton.max + 1] pressed;
 }
