@@ -104,10 +104,10 @@ nothrow:
     }
 }
 
-@nogc bool intersectVOX(Ray ray, VOX* vox, 
-                        out float t, 
-                        out vec3i index,
-                        ref Vec!vec3i visitedVoxels) nothrow
+ bool intersectVOX(Ray ray, VOX* vox, 
+                   out float t, 
+                   out vec3i index,
+                   ref Vec!vec3i visitedVoxels)
 {    
     int W = vox.width;
     int He = vox.height;
