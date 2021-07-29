@@ -18,9 +18,7 @@ else
     import bindbc.sdl;
 
 import turtle.renderer;
-import dplug.graphics.image;
-import dplug.graphics.color;
-import dplug.graphics.drawex;
+import dplug.graphics;
 
 IGraphics createGraphics()
 {

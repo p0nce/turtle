@@ -5,9 +5,7 @@ public import std.math;
 public import dplug.math.vector;
 public import dplug.math.matrix;
 
-public import dplug.graphics.image;
-public import dplug.graphics.color;
-public import dplug.graphics.drawex;
+public import dplug.graphics;
 
 public import turtle.color;
 public import turtle.graphics;
