@@ -311,7 +311,7 @@ private:
                 throw new Exception("SDL shared library failed to load.");
             }
             else if(SDLSupport.badLibrary) {
-                if ( loadedSDLVersion() <= SDLSupport.sdl2010 )
+                if ( loadedSDLVersion() < SDLSupport.sdl209 )
                 {
                     throw new Exception("SDL One or more symbols failed to load.");
                 }

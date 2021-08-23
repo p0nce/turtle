@@ -5,5 +5,5 @@
     "turtle": { "path": "../.." },
     "vox-d": "~>1.0"
   },
-  "versions": [ "SDL_2010" ]
+  "versions": [ "SDL_209" ]
 }
