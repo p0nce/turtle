@@ -39,6 +39,18 @@ class Mouse
         return pressed[button];
     }
 
+    /// Hide mouse cursor.
+    void hide()
+    {
+        SDL_ShowCursor(SDL_DISABLE);
+    }
+
+    /// Show mouse cursor.
+    void show()
+    {
+        SDL_ShowCursor(SDL_ENABLE);
+    }
+
 package:
     float _x, _y;
 
