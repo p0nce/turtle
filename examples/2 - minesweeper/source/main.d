@@ -17,8 +17,6 @@ class MinesweeperExample : TurtleGame
 
     override void load()
     {
-        // Having a clear color with an alpha value different from 255 
-        // will result in a cheap motion blur.
         setBackgroundColor( RGBA(0, 11, 28, 255) );
         makeNewGrid();
     }
@@ -193,7 +191,6 @@ class MinesweeperExample : TurtleGame
     }
 
 private:
-    // grid state
     bool[GX][GY] isMine;
 
     bool gameOver;
