@@ -64,6 +64,7 @@ struct KeyData
 static immutable KeyData[] allKeys = 
 [
     KeyData("escape", SDLK_ESCAPE),
+    KeyData("return", SDLK_RETURN),
     KeyData("left", SDLK_LEFT),
     KeyData("right", SDLK_RIGHT),
     KeyData("up", SDLK_UP),
