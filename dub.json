@@ -8,6 +8,8 @@
     "importPaths": ["source"],
     "sourcePaths": ["source"],
 
+    "stringImportPaths": ["resources"],
+
     "dependencies": 
     {
         "bindbc-sdl": "~>0.0",

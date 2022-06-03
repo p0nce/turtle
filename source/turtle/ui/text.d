@@ -7,14 +7,13 @@ class Text : Widget
 {
     RGBA textColor = RGBA(255, 255, 255, 255);
     float fontSize = 25.0f;
-    string content = "";
-    
+    string content = "";    
 
     this(IUIContext context, string content)
     {
         super(context);
         this.content = content;
-        //_font = context.getFont();
+        _font = context.getFont(); // Get default font.
     }
 
     override Size promptSize(BoxConstraints constraints)
@@ -26,7 +25,7 @@ class Text : Widget
 
     override void rawDraw(ImageRef!RGBA raw)
     {
-       // raw.fillText(_font, content, fontSize, 0, textColor, getWidth() * 0.5f, getHeight() * 0.5f);
+        raw.fillText(_font, content, fontSize, 0, textColor, getWidth() * 0.5f, getHeight() * 0.5f);
     }    
 
 private:

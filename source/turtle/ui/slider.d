@@ -18,7 +18,7 @@ class VerticalSlider : Slider
 
 class HorizontalSlider : Slider
 {
-    this(UIContext context, float initialValue)
+    this(IUIContext context, float initialValue)
     {
         super(context, SliderOrientation.horz, initialValue);
     }

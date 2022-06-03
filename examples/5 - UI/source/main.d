@@ -86,13 +86,20 @@ public:
     {
         super(uiContext);
 
-        setCrossAxisAlignment(CrossAxisAlignment.start);
+        setCrossAxisAlignment(CrossAxisAlignment.stretch);        
 
-        _column = new Column(uiContext);
-        _column.setCrossAxisAlignment(CrossAxisAlignment.stretch);
+        auto column = new Column(uiContext);
+        column.setCrossAxisAlignment(CrossAxisAlignment.start);
+        column.addChild(new Text(uiContext, "Widgets can be"));
+        column.addChild(new Text(uiContext, "Placed in"));
+        column.addChild(new Text(uiContext, "Columns"));
+        addChild(column.withPadding(20));
+
+        column = new Column(uiContext);
+        column.setCrossAxisAlignment(CrossAxisAlignment.start);
+        column.addChild(new Text(uiContext, "or Rows"));
+        column.addChild(new VerticalSlider(uiContext, 0.5f));
+        column.addChild(new HorizontalSlider(uiContext, 0.5f));
+        addChild(column.withPadding(20));
     }
-
-private:
-    Column _column;
 }
-

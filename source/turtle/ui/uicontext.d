@@ -1,5 +1,6 @@
 module turtle.ui.uicontext;
 
+import dplug.core.nogc;
 import turtle.ui.widget;
 
 interface IUIContext
@@ -12,6 +13,8 @@ interface IUIContext
     Widget draggedElement();
     Widget focusedElement();
     Widget mouseOverElement();
+
+    Font getFont();
 }
 
 /// UIContext contains the "globals" of the UI. Every widget points to it.
@@ -26,10 +29,18 @@ public:
     this(Object model = null)
     {
         _model = model;
+        _defaultFont = mallocNew!Font( cast(ubyte[]) import("Lato-Semibold-stripped.ttf"));
     }
 
     ~this()
     {
+        destroyFree(_defaultFont);
+        _defaultFont = null;
+    }
+
+    Font getFont()
+    {
+        return _defaultFont;
     }
 
     /// Returns: app-specific application model. 
@@ -115,4 +126,7 @@ private:
 
     /// The "model" of the application, in order to have a MVC / undo / centralizd handling. 
     Object _model;
+
+
+    Font _defaultFont;
 }
