@@ -7,6 +7,7 @@ import turtle.renderer;
 import turtle.keyboard;
 import turtle.mouse;
 import turtle.node2d;
+import turtle.ui.uicontext;
 
 /// Inherit from this to make a game.
 class TurtleGame
@@ -97,6 +98,14 @@ protected:
         return _mouse;
     }
 
+    /// Get UI context object.
+    /// This is a global pointed to by every widget in the UI.
+    /// However, its lifetime is handled by Game.
+    IUIContext uiContext()
+    {
+        return _uiContext;
+    }
+
     /// Width of the window. Can only be used inside a `draw` override.
     double windowWidth()
     {
@@ -160,6 +169,8 @@ private:
 
     Node _root; // root of the scene
 
+    UIContext _uiContext; // UI global state.
+
     IGraphics _graphics;
 
     void run()
@@ -169,6 +180,7 @@ private:
         _keyboard = new Keyboard;
         _mouse = new Mouse;
         _root = new Node;
+        _uiContext = new UIContext; // By default, the "model" is the application object itself. 
 
         _graphics = createGraphics();
         scope(exit) destroy(_graphics);   
@@ -293,6 +305,8 @@ private:
             _framebuffer = ImageRef!RGBA.init;
             renderer.endFrame();
         } 
+
+        _uiContext = null;
     }
 
     void updateKeyboard(const(SDL_KeyboardEvent*) event)

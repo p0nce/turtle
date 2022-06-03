@@ -16,4 +16,6 @@ public import turtle.keyboard;
 public import turtle.mouse;
 public import turtle.node2d;
 
+public import turtle.ui;
+
 
