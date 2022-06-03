@@ -1,5 +1,5 @@
 {
-  "name": "markov-dungeon",
+  "name": "markov-rules",
   "targetType": "executable",
   "dependencies": {
     "turtle": { "path": "../.." }
