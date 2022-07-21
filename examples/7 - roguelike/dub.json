@@ -1,0 +1,17 @@
+{
+    "name": "aliasthis",
+    "targetName": "aliasthis",
+    "targetType": "executable",
+    "sourcePath": "source",
+    "importPaths": [ "source"],
+    
+    "license": "public domain",
+    "description": "An unfinished roguelike inspired by brogue.",
+
+    "dependencies": {
+        "turtle": { "path": "../.." }
+    },
+    "versions": [ "SDL_209" ]
+}
+
+
