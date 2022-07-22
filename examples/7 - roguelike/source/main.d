@@ -2,6 +2,7 @@ import turtle;
 static import std.random;
 import std.string;
 import std.random;
+import gamemixer;
 
 import aliasthis.config;
 import aliasthis.console;
@@ -25,6 +26,25 @@ class RoguelikeExample : TurtleGame
         _console = new Console(CONSOLE_WIDTH, CONSOLE_HEIGHT);
         _state = new StateMainMenu(_console, new LangEnglish);
         _accumulatedDelta = 0;
+        _mixer = mixerCreate();
+
+        IAudioSource music = _mixer.createSourceFromFile("data/music.mp3");
+        IAudioSource music2 = _mixer.createSourceFromFile("data/music2.mp3");
+        PlayOptions options;
+        options.loopCount = 1;
+        options.crossFadeInSecs = 0.500;
+        options.crossFadeOutSecs = 0.500;
+        options.fadeInSecs = 0.500;
+        _mixer.play(music, options);
+
+        options.loopCount = loopForever;
+        options.delayBeforePlay = 18.0f;
+        _mixer.play(music2, options);
+    }
+
+    ~this()
+    {        
+        mixerDestroy(_mixer);
     }
 
     override void update(double dt)
@@ -74,6 +94,7 @@ private:
     State _state;
     Console _console;
     double _accumulatedDelta;
+    IMixer _mixer;
 }
 
 

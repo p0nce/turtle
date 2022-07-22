@@ -9,7 +9,8 @@
     "description": "An unfinished roguelike inspired by brogue.",
 
     "dependencies": {
-        "turtle": { "path": "../.." }
+        "turtle": { "path": "../.." },
+        "game-mixer": "~>1.0"
     },
     "versions": [ "SDL_209" ]
 }
