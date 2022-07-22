@@ -1,0 +1,2 @@
+The whole state machine in the architecture is no good, and I encourage you not to follow that path.
+Do not have state like that for the game.
