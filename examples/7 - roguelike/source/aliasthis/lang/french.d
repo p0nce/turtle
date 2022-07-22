@@ -50,8 +50,6 @@ class LangFrench : Lang
         return
         [
             "Nouveau jeu",
-            "Charger jeu",
-            "Voir replay",
             "Changer langue",
             "Quitter"
         ];
