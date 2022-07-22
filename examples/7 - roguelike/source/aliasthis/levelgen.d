@@ -12,9 +12,7 @@ import aliasthis.config;
 class LevelGenerator
 {
     this()
-    {
-        // Load prefabs
-        //_prefabs = loadPrefabs();
+    {        
     }
 
     void generate(ref Xorshift rng, WorldState worldState)
@@ -67,109 +65,4 @@ class LevelGenerator
                     grid.updateCellGraphics(rng, c, k, 1.0f);
                 }
     }
-
-   // Prefab[] _prefabs;
-
 }
-/+
-class Prefab
-{
-    this(string[] lines)
-    {
-        _width = lines[0].width;
-
-        foreach(i; 1..lines.length)
-            assert(lines[i] == _width)
-
-        _height = cast(int)lines.length;
-
-
-        _data.length = _width * _height;
-        
-    }
-
-    vec2i transformDirection(int x, int y, Direction dir)
-    {
-        final switch(dir) with (Direction)
-        {
-
-            case unchanged: return vec2i(x, y);
-            case rotate90: return vec2i(height - 1 - y, x);
-            case rotate180: return vec2i(width - 1 - x, height - 1 - y);
-            case rotate270: return vec2i(y, width - 1 - x);
-            case invertXY: return vec2i(y, x);
-            case mirrorY: return vec2i(x, height - 1 - y);
-            case mirrorXY: return vec2i(height - 1 - y, width - 1 - x);
-            case mirrorX: return vec2i(width - 1 - x, y);
-        }
-    }
-
-    vec2i transformSize(int width, int height, Direction dir)
-    {
-        final switch(dir) with (Direction)
-        {
-            case unchanged:
-            case mirrorY:
-            case rotate180:
-            case mirrorX:
-                return vec2i(width, height);
-
-            case rotate90:            
-            case rotate270:
-            case invertXY:
-            case mirrorXY:
-                return vec2i(height, width);
-        }        
-    }
-
-    void applyDirection(Direction dir)
-    {
-        VOX newVox;
-        vec2i newSize = transformSize(width, height, depth, dir);
-        newVox.width = newSize.x;
-        newVox.height = newSize.y;
-        newVox.depth = newSize.z;
-        newVox.voxels.length = newVox.numVoxels();
-
-        for (int z = 0; z < newVox.depth; ++z)
-            for (int y = 0; y < newVox.height; ++y)
-                for (int x = 0; x < newVox.width; ++x)
-                {
-                    vec2i source = transformDirection(x, y, z, dir);
-                    newVox.voxel(x, y, z) = vox.voxel(source.x, source.y, source.z);                    
-                }
-
-        vox = newVox;
-    }
-
-    CellType[] data;
-}
-
-
-enum Direction
-{
-    unchanged,
-    rotate90,
-    rotate180,
-    rotate270,
-    invertXY,
-    mirrorY,
-    mirrorXY,
-    mirrorX
-}
-
-
-Prefab[] loadPrefabs()
-{
-    Prefab[] list;
-
-    void addPrefab(string[] s)
-    {
-        for (Direction dir = Direction.min; dir <= Direction.max; ++dir)
-        {
-            auto prefab = new Prefab(s);
-            prefab.applyDirection(dir);
-            list ~= prefab;                        
-        }
-    }
-}+/

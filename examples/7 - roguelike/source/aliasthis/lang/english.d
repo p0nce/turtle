@@ -44,8 +44,6 @@ class LangEnglish : Lang
         return
         [
             "New game",
-            "Load game",
-            "View recording",
             "Change language",
             "Quit"
         ];

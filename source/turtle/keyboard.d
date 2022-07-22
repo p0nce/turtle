@@ -8,6 +8,8 @@ alias KeyConstant = string;
 
 
 /// Provides an interface to the user's keyboard.
+/// Only a few KeyConstants are known, and the user can poll their status.
+/// The other keys go through text input SDL system, so that shift + key behave correctly.
 class Keyboard
 {
     this()
@@ -25,12 +27,20 @@ class Keyboard
 
 package:
 
-    SDL_Keycode getSDLKeycodeFromKey(KeyConstant key)
+    static SDL_Keycode getSDLKeycodeFromKey(KeyConstant key)
     {
         foreach(ref k; allKeys)
             if (k.tcon == key)
                 return k.sdlk;
         throw new Exception(format("Unknown key constant: %s", key));
+    }
+
+    static KeyConstant getKeyFromSDLKeycode(SDL_Keycode code)
+    {
+        foreach(ref k; allKeys)
+            if (k.sdlk == code)
+                return k.tcon;
+        return null; // not found
     }
 
     // Mark key as pressed and return previous state.

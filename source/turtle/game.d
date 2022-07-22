@@ -1,5 +1,6 @@
 module turtle.game;
 
+import core.stdc.string: strlen;
 import bindbc.sdl;
 import dplug.canvas;
 import turtle.graphics;
@@ -58,6 +59,12 @@ public:
 
     /// Callback function triggered when a mouse wheel is turned.
     void mouseWheel(float wheelX, float wheelY)
+    {
+    }
+
+    /// Callback function triggered when a (known to Turtle) keyboard key is pressed.
+    /// This can also be called by a text input event.
+    void keyPressed(KeyConstant key)
     {
     }
 
@@ -188,6 +195,8 @@ private:
         // Load override
         load();
 
+        SDL_StartTextInput();
+
         uint ticks = _graphics.getTicks(); 
 
         while(!_gameShouldExit)
@@ -218,7 +227,25 @@ private:
                     case SDL_KEYDOWN:
                     case SDL_KEYUP:
                         updateKeyboard(&event.key);
+
+                        // Callback if this is a known key
+                        SDL_Keycode keycode = event.key.keysym.sym;
+                        KeyConstant keyConstant = Keyboard.getKeyFromSDLKeycode(keycode);
+
+                        if (keyConstant !is null) // if a known key
+                        {
+                            if (event.type == SDL_KEYDOWN)
+                                keyPressed(keyConstant);
+                        }
                         break;
+
+                    case SDL_TEXTINPUT:
+                    {
+                        char* ptext = event.text.text.ptr;
+                        string text = ptext[0..strlen(ptext)].idup;
+                        keyPressed(text);
+                        break;
+                    }
 
                     case SDL_MOUSEMOTION:
                     {
@@ -305,7 +332,8 @@ private:
             _framebuffer = ImageRef!RGBA.init;
             renderer.endFrame();
         } 
-
+        
+        SDL_StopTextInput();
         _uiContext = null;
     }
 

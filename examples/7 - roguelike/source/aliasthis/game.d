@@ -10,19 +10,6 @@ import aliasthis.console,
        aliasthis.change,
        aliasthis.worldstate;
 
-
-struct SaveFile
-{
-    string magic;
-    ubyte majorVersion;
-    ubyte minorVersion;
-    uint seed;
-    uint commandLength;
-    ubyte[] commandLog; // commands bytecode
-}
-
-immutable string SAVE_MAGIC_STRING = "ATSave";
-
 // Holds the game state and how we got there.
 // 
 class Game

@@ -219,17 +219,6 @@ public:
 
         
         _menu.draw(55, 19, _console);
-       /* _fire.progress(dt);
-
-        // draw fire
-        for (int y = 1; y < 31; ++y)
-        {
-            for (int x = 32; x < 91; ++x)
-            {   
-              //  _console.setBackgroundColor(_fire.get(x - 32, y - 1));
-                _console.putChar(x, y, 0);
-            }
-        }*/
     }
 
     override State handleKeypress(KeyConstant key)
@@ -244,14 +233,8 @@ public:
         else if (key == "return")
         {
             if (_menu.index() == 0) // new game
-                return new StateIntro(_console, _lang, unpredictableSeed);
-            else if (_menu.index() == 1) // load game
-            {
-            }
-            else if (_menu.index() == 2) // view recording
-            {
-            }
-            else if (_menu.index() == 3) // change language
+                return new StateIntro(_console, _lang, unpredictableSeed);            
+            else if (_menu.index() == 1) // change language
             {
                 Lang lang;
                 if (cast(LangEnglish)_lang)
@@ -261,7 +244,7 @@ public:
 
                 return new StateMainMenu(_console, lang);
             }
-            else if (_menu.index() == 4) // quit
+            else if (_menu.index() == 2) // quit
             {
                 return null;
             }
@@ -412,15 +395,15 @@ public:
         {
             commands ~= Command.createWait();
         }
-        else if (key == "less")
+        else if (key == "<")
         {
             commands ~= Command.createMovement(Direction.ABOVE);
         }
-        else if (key == "greater")
+        else if (key == ">")
         {
             commands ~= Command.createMovement(Direction.BELOW);
         }
-        else if (key == "u")
+        else if (key == "u" || key == "U")
         {
             _game.undo();          
         }
