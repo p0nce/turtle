@@ -79,5 +79,16 @@ static immutable KeyData[] allKeys =
     KeyData("right", SDLK_RIGHT),
     KeyData("up", SDLK_UP),
     KeyData("down", SDLK_DOWN),
-    KeyData("space", SDLK_SPACE)
+    KeyData("space", SDLK_SPACE),
+
+    KeyData("KP_0", SDLK_KP_0),
+    KeyData("KP_1", SDLK_KP_1),
+    KeyData("KP_2", SDLK_KP_2),
+    KeyData("KP_3", SDLK_KP_3),
+    KeyData("KP_4", SDLK_KP_4),
+    KeyData("KP_5", SDLK_KP_5),
+    KeyData("KP_6", SDLK_KP_6),
+    KeyData("KP_7", SDLK_KP_7),
+    KeyData("KP_8", SDLK_KP_8),
+    KeyData("KP_9", SDLK_KP_9),
 ];
