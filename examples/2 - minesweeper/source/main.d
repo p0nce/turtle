@@ -11,8 +11,8 @@ int main(string[] args)
 
 class MinesweeperExample : TurtleGame
 {
-    enum GX = 21;
-    enum GY = 12;
+    enum GX = 16;
+    enum GY = 9;
     enum MINE_DENSITY = 17.0f;
 
     override void load()
@@ -121,7 +121,7 @@ class MinesweeperExample : TurtleGame
                     }
                     if (x == _sx && y == _sy && isClickable(x, y))
                     {
-                        fillStyle = "#ffff0020";
+                        fillStyle = "#ffff0050";
                         fillRect(0, 0, 1, 1);
                     }
                     restore;
@@ -195,6 +195,7 @@ private:
 
     bool gameOver;
     bool gameWin;
+    bool firstClick;
     int HIDDEN = 0;
     int FLAG = 1;
     int SHOWN = 2;
@@ -225,6 +226,7 @@ private:
     {
         gameWin = false;
         gameOver = false;
+        firstClick = true;
         for (int y = 0; y < GY; ++y)
         {
             for (int x = 0; x < GX; ++x)
@@ -305,6 +307,14 @@ private:
             return;
 
         isShown[y][x] = SHOWN;
+
+        // First reveal never on a mine
+        if (firstClick)
+        {
+            isMine[y][x] = false;
+            firstClick = false;
+        }
+
         char ch = displayState(x, y);
 
         if (ch == '*')

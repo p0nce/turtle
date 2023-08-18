@@ -455,6 +455,7 @@ private:
 
     /// Sorted children in Z-lexical-order (sorted by Z, or else increasing index in _children).
     Vec!Widget _zOrderedChildren;
+    Vec!Widget _sortScratchBuf;
 
     // Sort children in ascending z-order
     // Input: unsorted _children
@@ -471,7 +472,8 @@ private:
         }
 
         // This is a stable sort, so the order of children with same z-order still counts.
-        grailSort!Widget(_zOrderedChildren[],
+        timSort!Widget(_zOrderedChildren[],
+                       _sortScratchBuf,
                             (a, b) nothrow @nogc 
                             {
                                 if (a.zOrder < b.zOrder) return 1;
