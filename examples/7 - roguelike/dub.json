@@ -2,7 +2,7 @@
     "name": "aliasthis",
     "targetName": "aliasthis",
     "targetType": "executable",
-    "sourcePath": "source",
+    "sourcePaths": ["source"],
     "importPaths": [ "source"],
     
     "license": "public domain",
