@@ -1,6 +1,6 @@
 import turtle;
 static import std.random;
-
+import gamemixer;
 import dosfont;
 
 int main(string[] args)
@@ -15,10 +15,26 @@ class MinesweeperExample : TurtleGame
     enum GY = 9;
     enum MINE_DENSITY = 17.0f;
 
+    IMixer mixer; 
+    IAudioSource soundLoose;
+    IAudioSource soundReveal;
+    IAudioSource soundSelect;
+
     override void load()
     {
         setBackgroundColor( RGBA(0, 11, 28, 255) );
         makeNewGrid();
+
+        mixer = mixerCreate();
+        // Obviously you will need a `music.mp3` file in the working directory.
+        IAudioSource music = mixer.createSourceFromFile("bg.mp3");
+        soundLoose = mixer.createSourceFromFile("loose.wav");
+        soundReveal = mixer.createSourceFromFile("reveal.wav");
+        soundSelect = mixer.createSourceFromFile("select.wav");
+        PlayOptions options;
+        options.volume = 0.25;
+        options.loopCount = loopForever;
+        mixer.play(music, options);
     }
 
     override void update(double dt)
@@ -87,7 +103,7 @@ class MinesweeperExample : TurtleGame
                         fillRect(0, 0.9, 1, 0.1);
                         fillRect(0.9, 0, 0.1, 1);
 
-                        fillStyle = RGBA(74, 146, 237, 255);                        
+                        fillStyle = RGBA(74, 146, 237, 255);
                         fillRect(0, 0, 1, 0.1);
                         fillRect(0, 0, 0.1, 1);
 
@@ -101,7 +117,7 @@ class MinesweeperExample : TurtleGame
                         }
                     }
                     else
-                    {                        
+                    {
                         if (ch != '0')
                         {
                             float textScale = _S / 16;
@@ -127,7 +143,7 @@ class MinesweeperExample : TurtleGame
                     restore;
                 }
             }
-        }                
+        }
     }
 
     bool isClickable(int x, int y)
@@ -171,20 +187,22 @@ class MinesweeperExample : TurtleGame
             }
             else if (isShown[_sy][_sx] == HIDDEN)
             {
-                reveal(_sx, _sy);
+                reveal(_sx, _sy, 0);
             }
             else
             {
                 int mines = neighbourMines(_sx, _sy);
                 if (mines > 0)
-                {                    
+                {
+                    int skipSound = 0;
+
                     int flags = neighbourFlags(_sx, _sy);
                     if (flags == mines)
                         for (int dy = -1; dy < 2; ++dy)
                             for (int dx = -1; dx < 2; ++dx)
                                 if (isInGrid(_sx + dx, _sy + dy))
                                     if (isShown[_sy+dy][_sx+dx] == HIDDEN)
-                                        reveal(_sx + dx, _sy + dy);
+                                        reveal(_sx + dx, _sy + dy, skipSound++);
                 }
             }
         }
@@ -252,10 +270,19 @@ private:
 
     void setSelection(float mouseX, float mouseY)
     {
-        _sx = cast(int)( (mouseX - _marginX) / _S);
-        _sy = cast(int)( (mouseY - _marginY) / _S);
-        if (!isInGrid(_sx, _sy))
-            _sx = _sy = 1;
+        int sx = cast(int)( (mouseX - _marginX) / _S);
+        int sy = cast(int)( (mouseY - _marginY) / _S);
+
+        if (!isInGrid(sx, sy))
+            sx = sy = -1;
+
+        if (_sx != sx || _sy != sy)
+        {
+            if (sx != -1 && sy != -1)
+                mixer.play(soundSelect);
+            _sx = sx;
+            _sy = sy;
+        }        
     }
 
     char displayState(int x, int y)
@@ -301,7 +328,7 @@ private:
         return neighbourThatAre(x, y, HIDDEN);
     }
 
-    void reveal(int x, int y)
+    void reveal(int x, int y, int recurse)
     {
         if (isShown[y][x] != HIDDEN)
             return;
@@ -311,14 +338,26 @@ private:
         // First reveal never on a mine
         if (firstClick)
         {
-            isMine[y][x] = false;
+            for (int dy = -1; dy < 2; ++dy)
+                for (int dx = -1; dx < 2; ++dx)
+                    if (isInGrid(x+dx, y+dy))
+                        isMine[y+dy][x+dx] = false;
+            
             firstClick = false;
         }
 
         char ch = displayState(x, y);
 
         if (ch == '*')
+        {
+            mixer.play(soundLoose);
             gameOver = true;
+        }
+        else
+        {
+            if (recurse == 0)
+                mixer.play(soundReveal);
+        }
 
         // recurse if free space
         if (ch == '0')
@@ -328,7 +367,7 @@ private:
                 for (int dx = -1; dx < 2; ++dx)
                 {
                     if (isInGrid(x+dx, y+dy))
-                        reveal(x+dx, y+dy);
+                        reveal(x+dx, y+dy, recurse+1);
                 }
             }
         }
