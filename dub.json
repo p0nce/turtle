@@ -13,8 +13,8 @@
     "dependencies": 
     {
         "bindbc-sdl": "~>0.0",
-        "dplug:math": ">=12.0.4 <14.0.0",
-        "dplug:canvas": ">=12.0.4 <14.0.0"
+        "dplug:math": ">=12.0.4 <15.0.0",
+        "dplug:canvas": ">=12.0.4 <15.0.0"
     },
 
     "versions": ["SDL_2010"]
