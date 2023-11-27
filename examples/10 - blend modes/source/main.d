@@ -24,6 +24,10 @@ class BlendModesExample : TurtleGame
         {
             save();
 
+            float dx = sin(elapsedTime)*20;
+            float dy = cos(elapsedTime)*20;
+
+
             void drawing(float x, float y, CompositeOperation op)
             {
                 save;
@@ -52,6 +56,7 @@ class BlendModesExample : TurtleGame
                 canvas.fillCircle(150, 150, 50);
 
                 canvas.globalCompositeOperation = op;
+                translate(dx, dy);
 
                 auto grad = canvas.createCircularGradient(W/2, H/2, W/2);
                 grad.addColorStop(0.0, RGBA(255, 255, 255, 255));
@@ -70,6 +75,8 @@ class BlendModesExample : TurtleGame
                 canvas.fillCircle(W/2, H/2, W/2);
                 restore;
             }
+
+            
 
             drawing(0, 0, CompositeOperation.sourceOver);
             drawing(250, 0, CompositeOperation.lighter);
