@@ -9,17 +9,15 @@ int main(string[] args)
     return 0;
 }
 
-
 // dimensions
-//enum TILE_SIZE = 15;
-enum COLUMNS = 40;
-enum ROWS = 40;
+enum COLUMNS = 30;
+enum ROWS = 30;
 
 class RTSPathFinding : TurtleGame
 {
     override void load()
     {
-        setBackgroundColor( color("#AAA") );
+        setBackgroundColor( color("#000000") );
         grid = new Grid;
         grid.addUnit(2, 2);
         grid.addUnit(2, 3);
@@ -42,6 +40,7 @@ class RTSPathFinding : TurtleGame
     override void update(double dt)
     {
         if (keyboard.isDown("escape")) exitGame;
+        if (keyboard.isDown("c")) grid.clearWorld;
         grid.update(keyboard, mouse, screenWidth, screenHeight);
     }
 
@@ -57,10 +56,9 @@ class RTSPathFinding : TurtleGame
         frame.drawDOSText(DOSFontType.large8x16, "Hold mouse right to remove wall", textCol, 16, y); y += 16;
         frame.drawDOSText(DOSFontType.large8x16, "Press C to clear all", textCol, 16, y); y += 16;
         frame.drawDOSText(DOSFontType.large8x16, "Press D to select destination", textCol, 16, y); y += 16;
-        frame.drawDOSText(DOSFontType.large8x16, "Press U to select destination", textCol, 16, y); y += 16;
+        frame.drawDOSText(DOSFontType.large8x16, "Press U to create unit", textCol, 16, y); y += 16;
     }
 
-    bool showPath;
     Grid grid;
     float screenWidth;
     float screenHeight;
@@ -100,17 +98,15 @@ class Unit
         cantGo();
         chooseDirection();
         walk();
-        //wait();
     }
 
     void draw(Canvas* canvas)
-    {
-        canvas.fillStyle = "#AAF";
-        float rx = (grid.offsetX + x * grid.tileSize + grid.tileSize * 0.1f);
-        float ry = (grid.offsetY + y * grid.tileSize + grid.tileSize * 0.1f);
-        float rw = grid.tileSize * 0.8f;
-        float rh = grid.tileSize * 0.8f;
-        canvas.fillRect(rx, ry, rw, rh);
+    {        
+        canvas.fillStyle = "#eda1ff";
+        float rx = (grid.offsetX + x * grid.tileSize + grid.tileSize * 0.5f);
+        float ry = (grid.offsetY + y * grid.tileSize + grid.tileSize * 0.5f);
+        float rr = grid.tileSize * 0.35f;
+        canvas.fillCircle(rx, ry, rr);
     }
 
     void cantGo()
@@ -235,18 +231,24 @@ class Grid
         return path[x + y * COLUMNS]; 
     }
 
-    int destX = -1;
-    int destY = -1;
+    int destX;
+    int destY;
     bool hasPath = false;
-    bool showPath = false;
 
     float tileSize;
     float offsetX;
     float offsetY;
 
-
     this()
     {
+        clearWorld();
+    }
+
+    void clearWorld()
+    {
+        destX = -1;
+        destY = -1;
+        units = [];
         // create original map
         for (int j = 0; j < ROWS; ++j)
         {
@@ -294,12 +296,6 @@ class Grid
         {
             addUnit(mx, my);
         }
-
-        if (keyboard.isPressed("p"))
-        {
-            showPath = !showPath;
-        }
-
         foreach(unit; units)
             unit.update();
     }
@@ -313,8 +309,6 @@ class Grid
     {
         drawWalls(canvas);
         drawDestination(canvas);
-        drawPath(canvas);
-
         foreach(unit; units)
             unit.draw(canvas);
     }
@@ -326,7 +320,7 @@ class Grid
             for (int i = 0; i < COLUMNS; ++i)
             {
                 int tile =  getBlock(i, j);
-                canvas.fillStyle = (tile == 1) ? "#F00" : "#FFF";
+                canvas.fillStyle = (tile == 1) ? "#ff2d8a" : "#fff";
                 canvas.fillRect(offsetX + i * tileSize, offsetY + j * tileSize, tileSize, tileSize);
             }
         }
@@ -336,15 +330,9 @@ class Grid
     {
         if (destX > -1)
         {
-            canvas.fillStyle = "#0F0";
+            canvas.fillStyle = "#5aff93";
             canvas.fillRect(offsetX + destX * tileSize, offsetY + destY * tileSize, tileSize, tileSize);
         }
-    }
-
-    void drawPath(Canvas* canvas)
-    {
-        if (!(hasPath && showPath))
-            return;
     }
 
     struct PathPart
