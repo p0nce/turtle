@@ -24,6 +24,8 @@ class Keyboard
         SDL_Scancode sdlsc = SDL_GetScancodeFromKey(sdlk);
         return _state[ sdlsc ];
     }
+    ///ditto
+    alias isPressed = isDown;
 
 package:
 
@@ -91,4 +93,31 @@ static immutable KeyData[] allKeys =
     KeyData("KP_7", SDLK_KP_7),
     KeyData("KP_8", SDLK_KP_8),
     KeyData("KP_9", SDLK_KP_9),
+
+    KeyData("a", SDLK_a),
+    KeyData("b", SDLK_b),
+    KeyData("c", SDLK_c),
+    KeyData("d", SDLK_d),
+    KeyData("e", SDLK_e),
+    KeyData("f", SDLK_f),
+    KeyData("g", SDLK_g),
+    KeyData("h", SDLK_h),
+    KeyData("i", SDLK_i),
+    KeyData("j", SDLK_j),
+    KeyData("k", SDLK_k),
+    KeyData("l", SDLK_l),
+    KeyData("m", SDLK_m),
+    KeyData("n", SDLK_n),
+    KeyData("o", SDLK_o),
+    KeyData("p", SDLK_p),
+    KeyData("q", SDLK_q),
+    KeyData("r", SDLK_r),
+    KeyData("s", SDLK_s),
+    KeyData("t", SDLK_t),
+    KeyData("u", SDLK_u),
+    KeyData("v", SDLK_v),
+    KeyData("w", SDLK_w),
+    KeyData("x", SDLK_x),
+    KeyData("y", SDLK_y),
+    KeyData("z", SDLK_z),
 ];

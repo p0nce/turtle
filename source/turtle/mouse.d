@@ -26,14 +26,36 @@ class Mouse
     {
         return _x;
     }
+    ///ditto
+    alias x = positionX;
 
     /// Return Y position inside the window.
     float positionY()
     {
         return _y;
     }
+    ///ditto
+    alias y = positionY;
 
-    /// Returns: `true` if the button is currently pressed.
+    /// Returns: `true` if the left button is currently pressed.
+    bool left()
+    {
+        return isPressed(MouseButton.left);
+    }
+
+    /// Returns: `true` if the right button is currently pressed.
+    bool right()
+    {
+        return isPressed(MouseButton.right);
+    }
+
+    /// Returns: `true` if the middle button is currently pressed.
+    bool middle()
+    {
+        return isPressed(MouseButton.middle);
+    }
+
+    /// Returns: `true` if the given button is currently pressed.
     bool isPressed(MouseButton button)
     {
         return pressed[button];
