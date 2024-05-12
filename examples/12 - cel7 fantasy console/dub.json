@@ -1,0 +1,10 @@
+{
+  "name": "cel7",
+  "targetType": "executable",
+  "license":  "GPL-v3",
+  "dependencies": {
+    "turtle": { "path": "../.." },
+    "fe-d": "~>1.0"
+  },
+  "versions": [ "SDL_209" ]
+}
