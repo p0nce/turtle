@@ -21,13 +21,6 @@ enum SCRATCH_SIZE = MEMORY_SIZE;
 
 alias ssize_t = ptrdiff_t;
 
-enum 
-{
-    BK_Normal = 0,
-    BK_Rom = 1,
-    BK_COUNT = 2
-}
-
 struct rgba_t
 {
 	ubyte r;
@@ -71,15 +64,13 @@ nothrow @nogc:
             ApiFunc(       "put",       &fe_put ),
             ApiFunc(       "get",       &fe_get ),
             ApiFunc(      "fill",      &fe_fill ),
-            ApiFunc(    "strlen",    &fe_strlen ),
+            ApiFunc(    "length",    &fe_length ),
 			ApiFunc(     "ticks",     &fe_ticks ),
 
             /*	ApiFunc(  "strstart",  &fe_strstart ),
             ApiFunc(     "strat",     &fe_strat ),
             ApiFunc( "char->num",    &fe_ch2num ),
             ApiFunc( "num->char",    &fe_num2ch ),
-            ApiFunc(  "username",  &fe_username ),
-            ApiFunc(     "delay",     &fe_delay ),
             
             ApiFunc(    "swibnk",    &fe_swibnk ), */
         ];
@@ -229,7 +220,7 @@ nothrow @nogc:
         int marginY = (height - consoleHeightPixels)/2;
 		int W = config.width;
 		int H = config.height;
-		ubyte* displayMemory = &memory[BK_Normal][DISPLAY_START];
+		ubyte* displayMemory = &memory[DISPLAY_START];
         for (int row = 0; row < H; ++row)
         {
             for (int col = 0; col < W; ++col)
@@ -292,22 +283,21 @@ private:
 	void* fe_ctx_data = null;
     fe_Context* ctx = null;
     bool quit = false;
-	int bank = BK_Normal;
 	ubyte color = 1;
 	int curTick;
 
 	Config config = Config("Hello world!", 16, 16, 1, false);
-	ubyte[MEMORY_SIZE][BK_COUNT] memory;
+	ubyte[MEMORY_SIZE] memory;
 	ubyte[SCRATCH_SIZE] scratch; // a scratch buffer
 
 	rgba_t* palettePointer()
     {
-		return cast(rgba_t*) &memory[BK_Normal][PALETTE_START];
+		return cast(rgba_t*) &memory[PALETTE_START];
     }
 
 	ubyte* fontPointer()
     {
-		return &memory[BK_Normal][FONT_START];
+		return &memory[FONT_START];
     }
 
 	void get_string_global(const(char)* name, char *buf, size_t sz)
@@ -448,7 +438,7 @@ fe_Object* fe_poke(fe_Context *ctx, fe_Object *arg) nothrow @nogc
 	}
 
 	check_user_address(ctx, addr, sz, true);
-	memcpy(&vm.memory[vm.bank][addr], buf, sz);
+	memcpy(&vm.memory[addr], buf, sz);
 
 	return fe_bool(ctx, 0);
 }
@@ -460,18 +450,18 @@ void check_user_address(fe_Context *ctx, size_t addr, size_t sz, bool write) not
 {
 	Cel7 vm = cast(Cel7) fe_userdata(ctx);
 
-	if ((write && vm.bank == BK_Rom) || (addr + sz) >= MEMORY_SIZE) 
+	if ((addr + sz) >= MEMORY_SIZE) 
     {
 		const(char)* action = write ? "writeable".ptr : "readable".ptr;
 
 		if (sz == 1) 
         {
-			raise_errorf(ctx, "Address [%d]0x%04X not %s.".ptr, vm.bank, addr, action);
+			raise_errorf(ctx, "Address 0x%04X not %s.".ptr, addr, action);
 		} 
         else 
         {
-			raise_errorf(ctx, "Address [%d]0x%04X...%04X not %s.".ptr,
-                         vm.bank, addr, addr + (sz - 1), action);
+			raise_errorf(ctx, "Address 0x%04X...%04X not %s.".ptr,
+                         addr, addr + (sz - 1), action);
 		}
 	}
 }
@@ -489,7 +479,7 @@ fe_Object * fe_peek(fe_Context *ctx, fe_Object *arg) nothrow @nogc
 		check_user_address(ctx, addr, size, false);
 
 		char *buf = cast(char*) calloc(size, char.sizeof); // PERF: wat
-		memcpy(buf, cast(void *)&vm.memory[vm.bank][addr], size);
+		memcpy(buf, cast(void *)&vm.memory[addr], size);
 
 		fe_Object *retval = fe_string(ctx, cast(const char *)&buf);
 		free(buf);
@@ -498,7 +488,7 @@ fe_Object * fe_peek(fe_Context *ctx, fe_Object *arg) nothrow @nogc
     else 
     {
 		check_user_address(ctx, addr, 1, false);
-		return fe_number(ctx, cast(float)vm.memory[vm.bank][addr]);
+		return fe_number(ctx, cast(float)vm.memory[addr]);
 	}
 }
 
@@ -514,11 +504,6 @@ fe_Object* fe_put(fe_Context *ctx, fe_Object *arg) nothrow @nogc
 	Cel7 vm = cast(Cel7) fe_userdata(ctx);
 
 	ubyte* buf = vm.scratch.ptr;
-
-	if (vm.bank == BK_Rom) 
-    {
-		fe_errorf(ctx, "Cannot write to bank.".ptr);
-	}
 
 	size_t sx = cast(size_t)fe_tonumber(ctx, fe_nextarg(ctx, &arg));
 	size_t sy = cast(size_t)fe_tonumber(ctx, fe_nextarg(ctx, &arg));
@@ -537,8 +522,8 @@ fe_Object* fe_put(fe_Context *ctx, fe_Object *arg) nothrow @nogc
         {
 			size_t coord = sy * width + x;
 			size_t addr = DISPLAY_START + (coord * 2);
-			vm.memory[BK_Normal][addr + 0] = buf[i];
-			vm.memory[BK_Normal][addr + 1] = vm.color;
+			vm.memory[addr + 0] = buf[i];
+			vm.memory[addr + 1] = vm.color;
 		}
 
 	} while (fe_type(ctx, arg) == FE_TPAIR);
@@ -551,17 +536,13 @@ fe_Object * fe_get(fe_Context *ctx, fe_Object *arg) nothrow @nogc
 	Cel7 vm = cast(Cel7) fe_userdata(ctx);
 	size_t x = cast(size_t)fe_tonumber(ctx, fe_nextarg(ctx, &arg));
 	size_t y = cast(size_t)fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-	ubyte res = vm.memory[BK_Normal][y * vm.config.width + x + 0];
+	ubyte res = vm.memory[y * vm.config.width + x + 0];
 	return fe_number(ctx, res);
 }
 
 fe_Object * fe_fill(fe_Context *ctx, fe_Object *arg) nothrow @nogc
 {
 	Cel7 vm = cast(Cel7) fe_userdata(ctx);
-	if (vm.bank == BK_Rom) 
-    {
-		fe_errorf(ctx, "Cannot write to bank.");
-	}
 
 	size_t x = cast(size_t)fe_tonumber(ctx, fe_nextarg(ctx, &arg));
 	size_t y = cast(size_t)fe_tonumber(ctx, fe_nextarg(ctx, &arg));
@@ -582,15 +563,15 @@ fe_Object * fe_fill(fe_Context *ctx, fe_Object *arg) nothrow @nogc
         {
 			size_t coord = dy * vm.config.width + dx;
 			size_t addr = DISPLAY_START + (coord * 2);
-			vm.memory[BK_Normal][addr + 0] = c;
-			vm.memory[BK_Normal][addr + 1] = vm.color;
+			vm.memory[addr + 0] = c;
+			vm.memory[addr + 1] = vm.color;
 		}
 	}
 
 	return fe_bool(ctx, 0);
 }
 
-fe_Object * fe_strlen(fe_Context *ctx, fe_Object *arg) nothrow @nogc
+fe_Object * fe_length(fe_Context *ctx, fe_Object *arg) nothrow @nogc
 {
 	char[4096] buf;
 	size_t sz = fe_tostring(ctx, fe_nextarg(ctx, &arg), cast(char *)&buf, buf.sizeof);
@@ -629,51 +610,14 @@ fe_Object* fe_num2ch(fe_Context *ctx, fe_Object *arg)
 	return fe_string(ctx, buf.ptr);
 }
 
-/*
-static fe_Object *
-fe_username(fe_Context *ctx, fe_Object *arg)
-{
-	return fe_string(ctx, get_username());
-}
-
-fe_Object* fe_delay(fe_Context *ctx, fe_Object *arg)
-{
-	float delay = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-
-	if (delay < 0 || !isnormal(delay)) {
-		fe_errorf("Delay %f invalid.", delay);
-	}
-
-	delay_val.tv_sec  = cast(time_t)roundf(delay);
-	delay_val.tv_usec = cast(suseconds_t)((delay - roundf(delay)) * 1000000);
-	gettimeofday(&delay_set, NULL);
-
-	return fe_bool(ctx, 0);
-}
-*/
-
 fe_Object* fe_ticks(fe_Context *ctx, fe_Object *arg) nothrow @nogc
 {
 	Cel7 vm = cast(Cel7) fe_userdata(ctx);
 	return fe_number(ctx, cast(float)vm.curTick);
 }
 
-/*
-fe_Object* fe_swibnk(fe_Context *ctx, fe_Object *arg)
-{
-	float bank_arg = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-
-	if (bank_arg < 0 || bank_arg > BK_COUNT) {
-		fe_errorf("Cannot switch to bank %.f.", bank_arg);
-	}
-
-	bank = cast(size_t)bank_arg;
-
-	return fe_bool(ctx, 0);
-}*/
-
 static immutable string DEFAULT_CARTRIDGE_C7 = 
-`(= title "cel7ce")
+`(= title "cel7")
 (= width  16)
 (= height 16)
 
@@ -687,7 +631,7 @@ static immutable string DEFAULT_CARTRIDGE_C7 =
     (let x 0)
         (while (< x width)
         (color (+ 1 (rand 14)))
-            (put x y (num->char (+ 32 (rand 56))))
+            (put x y "a" )
             (= x (+ x 1))
             )
     (= y (+ y 1))
@@ -695,7 +639,7 @@ static immutable string DEFAULT_CARTRIDGE_C7 =
 
 (color 1)
 (do
-(let x (- (// width 2) (// (strlen msg) 2)))
+(let x (- (// width 2) (// (length msg) 2)))
     (let y (// height 2))
             (put x (- y 1) pad)
             (put x (- y 0) msg)

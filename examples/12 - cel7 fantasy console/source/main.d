@@ -11,13 +11,11 @@ import api;
 // Reference: https://github.com/kiedtl/cel7ce
 int main(string[] args)
 {
-    if (args.length != 2)
+    ubyte[] rom = null;
+    if (args.length == 2)
     {
-        writeln("Usage: cel7 <input.c7>");
-        return 1;
+        rom = cast(ubyte[]) std.file.read(args[1]);
     }
-
-    ubyte[] rom = cast(ubyte[]) std.file.read(args[1]);
     runGame(new Cel7Run(rom));
     return 0;
 }
@@ -30,7 +28,7 @@ class Cel7Run : TurtleGame
 
         // Create interpreter and eval whole file.
         vm = new Cel7;
-        vm.load(rom);
+        if (rom) vm.load(rom);
     }
 
     ubyte[] rom;

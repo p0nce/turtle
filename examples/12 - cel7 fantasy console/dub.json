@@ -3,8 +3,7 @@
   "targetType": "executable",
   "license":  "GPL-v3",
   "dependencies": {
-    "turtle": { "path": "../.." },
-    "fe-d": "~>1.0"
+    "turtle": { "path": "../.." }
   },
   "versions": [ "SDL_209" ]
 }
