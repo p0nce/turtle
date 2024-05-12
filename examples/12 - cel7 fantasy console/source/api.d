@@ -174,21 +174,31 @@ nothrow @nogc:
         fe_restoregc(ctx, gc);
     }
 
+    void callKeydown(const(char)* keyZT)
+    {
+        int gc = fe_savegc(ctx);
+        fe_Object*[2] objs;
+        objs[0] = fe_symbol(ctx, "keydown");
+        objs[1] = fe_string(ctx, keyZT);
+        fe_Object *res = fe_eval(ctx, fe_list(ctx, objs.ptr, 2));
+        fe_restoregc(ctx, gc);
+    }
+
 	// Render each char in a framebuffer.
 	// Note: only render in the used part of rgbaPixels.
 	// The buffer should be cleared before passed to this API.
 
     // PERF: compute hash of graphics memory + character memory?
-    // PERF: have an internal buffer.
-    //       if same char and colors as before, do not redraw
-	void render(int width, int height, ubyte* rgbaPixels, size_t pitchBytes)
+    // PERF: have an internal buffer? or mandate the out buffer to be unmodified?
+	void render(int width, 
+                int height, 
+                ubyte* rgbaPixels, 
+                size_t pitchBytes)
     {
 
         // First, compute size of console, so that character are always drawn in multiple of 7x7
         int scaleW = cast(int)(width / (config.width * 7));
         int scaleH = cast(int)(height / (config.height * 7));
-        //if (scaleW < 1) scaleW = 1;
-        //if (scaleH < 1) scaleH = 1;
         int scale = scaleW < scaleH ? scaleW : scaleH; // note: can be zero if too small
 
 		// Width and height of a character in output buffer
@@ -250,11 +260,8 @@ nothrow @nogc:
 							int xg =      x*scale + col*scale7 + marginX;
                             int yg = yy + y*scale + row*scale7 + marginY;
                             rgba_t* p = cast(rgba_t*)(rgbaPixels + (pitchBytes*yg) + xg*4);
-
                             for (int xx = 0; xx < scale; ++xx)
-                            {
 								p[xx] = color;
-                            }
                         }
                     }
                 }

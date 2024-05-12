@@ -42,6 +42,12 @@ class Cel7Run : TurtleGame
         dtDebt = 0;
     }
 
+    override void keyPressed(KeyConstant key)
+    {
+        // Note: turtle happens to give zero-terminated key constants.
+        vm.callKeydown(key.ptr);
+    }
+
     override void update(double dt)
     {
         if (keyboard.isDown("escape")) exitGame;
