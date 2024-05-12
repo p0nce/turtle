@@ -477,16 +477,22 @@ int equal(fe_Object *a, fe_Object *b)
 }
 
 
-static int streq(fe_Object *obj, const(char)* str) {
-  while (!isnil(obj)) {
-    int i;
-    for (i = 0; i < STRBUFSIZE; i++) {
-      if (strbuf(obj)[i] != *str) { return 0; }
-      if (*str) { str++; }
+static int streq(fe_Object *obj, const(char)* str) 
+{
+    while (!isnil(obj)) 
+    {
+        int i;
+        for (i = 0; i < STRBUFSIZE; i++) 
+        {
+            if (strbuf(obj)[i] != *str) 
+            { 
+                return 0; 
+            }
+            if (*str) { str++; }
+        }
+        obj = cdr(obj);
     }
-    obj = cdr(obj);
-  }
-  return *str == '\0';
+    return *str == '\0';
 }
 
 
@@ -505,7 +511,8 @@ static fe_Object* object_(fe_Context *ctx) {
 }
 
 
-fe_Object* fe_cons(fe_Context *ctx, fe_Object *pcar, fe_Object *pcdr) {
+fe_Object* fe_cons(fe_Context *ctx, fe_Object *pcar, fe_Object *pcdr) 
+{
   fe_Object *obj = object_(ctx);
   car(obj) = pcar;
   cdr(obj) = pcdr;
@@ -525,29 +532,32 @@ fe_Object* fe_number_impl(fe_Context *ctx, fe_Number n) {
   return obj;
 }
 
-static fe_Object* buildstring(fe_Context *ctx, fe_Object *tail, int chr) 
+// Add one character to a string chain
+fe_Object* buildstring(fe_Context *ctx, fe_Object *tail, int chr) 
 {
-  if (!tail || strbuf(tail)[STRBUFSIZE - 1] != '\0') {
-    fe_Object *obj = fe_cons(ctx, null, &nil);
-    settype(obj, FE_TSTRING);
-    if (tail) {
-      cdr(tail) = obj;
-      ctx.gcstack_idx--;
+    if (!tail || strbuf(tail)[STRBUFSIZE - 1] != '\0') 
+    {
+        fe_Object *obj = fe_cons(ctx, null, &nil);
+        settype(obj, FE_TSTRING);
+        if (tail) {
+            cdr(tail) = obj;
+            ctx.gcstack_idx--;
+        }
+        tail = obj;
     }
-    tail = obj;
-  }
-  strbuf(tail)[strlen(strbuf(tail))] = cast(char)chr;
-  return tail;
+    strbuf(tail)[strlen(strbuf(tail))] = cast(char)chr;
+    return tail;
 }
 
 
-fe_Object* fe_string_impl(fe_Context *ctx, const(char)*str) {
-  fe_Object *obj = buildstring(ctx, null, '\0');
-  fe_Object *tail = obj;
-  while (*str) {
-    tail = buildstring(ctx, tail, *str++);
-  }
-  return obj;
+fe_Object* fe_string_impl(fe_Context *ctx, const(char)*str) 
+{
+    fe_Object *obj = buildstring(ctx, null, '\0');
+    fe_Object *tail = obj;
+    while (*str) {
+        tail = buildstring(ctx, tail, *str++);
+    }
+    return obj;
 }
 
 fe_Object* fe_symbol_impl(fe_Context *ctx, const(char)* name) 
@@ -652,8 +662,12 @@ void fe_write(fe_Context *ctx, fe_Object *obj, fe_WriteFn fn, void *udata, int q
       break;
 
     case FE_TSTRING:
-      if (qt) { fn(ctx, udata, '"'); }
-      while (!isnil(obj)) {
+      if (qt) 
+      { 
+        fn(ctx, udata, '"'); 
+      }
+      while (!isnil(obj)) 
+      {
         int i;
         for (i = 0; i < STRBUFSIZE && strbuf(obj)[i]; i++) {
           if (qt && strbuf(obj)[i] == '"') { fn(ctx, udata, '\\'); }
