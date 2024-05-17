@@ -1,5 +1,6 @@
 import std.conv;
 import std.string;
+import std.math;
 import core.stdc.stdio;
 import turtle;
 import dosfont;
@@ -42,13 +43,16 @@ class Incremental : TurtleGame
     double productionSlowdown()
     {
         double p = points;
-        p = p - usingVersionControl ? 1000 : 10;
+        p = p - (usingVersionControl ? 1000 : 10);
         if (p < 0) p = 0;
 
         float slowDownFactor = 0.01;
-        if (usingSafeD) slowDownFactor /= 10;
+        if (usingSafeD) slowDownFactor /= 20;
         slowDownFactor *= exp(-prestigeAmount);
-        return 1 /  (1.0 + p * slowDownFactor);
+        double growth = 1 /  (1.0 + p * slowDownFactor);
+
+        // power 3/4, since there are 3 levels of slowdown but 3 or 4 of growth.
+        return pow(growth, 3.0 / 4.0);
     }
 
     override void update(double dt)
@@ -69,9 +73,9 @@ class Incremental : TurtleGame
         if (dmanThreeArms) dmanFactor = 1.5; 
         if (dmanFourArms) dmanFactor = 2;
 
-        points += dt * 0.2 * slow * dmans;
-        dmans  += dt * 0.3 * slow * farms;
-        farms  += dt * 0.4 * slow * factories;
+        points += dt * 0.5 * slow * dmans;
+        dmans  += dt * 0.5 * slow * farms;
+        farms  += dt * 0.5 * slow * factories;
 
         if (points >= 10)
             dmanDiscovered = true;
@@ -105,6 +109,7 @@ class Incremental : TurtleGame
                 {
                     points -= 10;
                     dmans += 1;
+                    lastBought = dman;
                 }
                 break;
             case farm: 
@@ -112,6 +117,7 @@ class Incremental : TurtleGame
                 {
                     points -= 100;
                     farms += 1;
+                    lastBought = farm;
                 }
                 break;
             case factory: 
@@ -119,6 +125,7 @@ class Incremental : TurtleGame
                 {
                     points -= 1000;
                     factories += 1;
+                    lastBought = factory;
                 }
                 break;
 
@@ -127,6 +134,7 @@ class Incremental : TurtleGame
                 {
                     points -= 300;
                     dmanThreeArms = true;
+                    lastBought = dmanUpgrade1;
                 }
                 break;
             case dmanUpgrade2: 
@@ -134,6 +142,7 @@ class Incremental : TurtleGame
                 {
                     points -= 600;
                     dmanFourArms = true;
+                    lastBought = dmanUpgrade2;
                 }
                 break;
             case useVersionControl:
@@ -141,6 +150,7 @@ class Incremental : TurtleGame
                 {
                     points -= 2000;
                     usingVersionControl = true;
+                    lastBought = useVersionControl;
                 }
                 break;
             case useSafeD: 
@@ -148,12 +158,14 @@ class Incremental : TurtleGame
                 {
                     points -= 3000;
                     usingSafeD = true;
+                    lastBought = useSafeD;
                 }
                 break;
             case prestige: 
                 while(canBeBought(prestige))
                 {
                     reset();
+                    lastBought = prestige;
                 }
                 break;
         }    
@@ -168,6 +180,7 @@ class Incremental : TurtleGame
 
     Clickable hovered; // last clickable pointed and buyable
     Clickable clicked; // clickable being bought, if any
+    Clickable lastBought; // last bought item
 
     enum Clickable
     {
@@ -251,7 +264,7 @@ class Incremental : TurtleGame
         void resource(string name, double amount, bool extraPrecise = false)
         {
             char[32] buf;
-            sprintf(buf.ptr, extraPrecise ? "%.3f" : "%.1f", amount);
+            sprintf(buf.ptr, extraPrecise ? "%.5f" : "%.1f", amount);
             with(console)
             {
                 col(color("#ffffff")); 
@@ -276,17 +289,19 @@ class Incremental : TurtleGame
                 bool underMouse = hovered == which;
                 bool click      = clicked == which;
                 bool buyable    = canBeBought(which);
+                bool wasLastBought = lastBought == which;
 
                 if (completed)
                 {
                     col(RGBA(128, 255, 128, 255));
                 }
-                else if (click)
-                    col(RGBA(255, 255, 200, 255));           
+                
                 else if (!buyable)
                     col(RGBA(140, 50, 50, 255));
                 else if (underMouse && buyable)
                     col(RGBA(255, 255, 0, 255));
+                else if (wasLastBought && buyable)
+                    col(RGBA(255, 255, 200, 255));
                 else
                     col(RGBA(250, 250, 250, 255));
 
@@ -307,21 +322,21 @@ class Incremental : TurtleGame
             {
                 cursor(0, 2);
                 button("Buy D-man           (10 LOC)", Clickable.dman); 
-                resource("D-Man:   ", dmans); description("Write 0.2 LOC / sec", Clickable.dman);
+                resource("D-Man:   ", dmans); description("Write 0.5 LOC / sec", Clickable.dman);
             }
 
             if (farmDiscovered)
             {
                 cursor(0, 3);
                 button("Buy D-man farm     (100 LOC)", Clickable.farm);
-                resource("Farm:    ", farms); description("Create 0.3 D-man / sec", Clickable.farm);
+                resource("Farm:    ", farms); description("Create 0.5 D-man / sec", Clickable.farm);
             }
 
             if (factoryDiscovered)
             {
                 cursor(0, 4);
                 button("Buy D-man factory   (1k LOC)", Clickable.factory); 
-                resource("Factory: ", factories); description("Create 0.4 farm / sec", Clickable.factory);
+                resource("Factory: ", factories); description("Create 0.5 farm / sec", Clickable.factory);
             }
 
             if (prestigeAmount > 1)
@@ -333,7 +348,7 @@ class Incremental : TurtleGame
 
             cursor(0, 7);
             col(color("grey"));
-            print("Because of code size, your production is reduced by factor =  "); resource("", productionSlowdown);
+            print("Because of code size, your production is reduced by factor =  "); resource("", productionSlowdown, true);
 
             if (farms >= 2 || factories >= 1)
             {
