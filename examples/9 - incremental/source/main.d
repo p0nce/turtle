@@ -18,25 +18,66 @@ class Incremental : TurtleGame
     {
         setBackgroundColor( color("rgb(38,38,54)") );
         setTitle("Incremental");
+
+        reset();
+        prestigeAmount = 0;
+
+    }
+
+    void reset()
+    {
+        prestigeAmount += log10(points);
         points = 0;
         dmans = 0;
         farms = 0;
         factories = 0;
+        _mx = -1;
+        _my = -1;
+        dmanThreeArms = false;
+        dmanFourArms = false;
+        usingVersionControl = false;
+        usingSafeD = false;
+    }
+
+    double productionSlowdown()
+    {
+        double p = points;
+        p = p - usingVersionControl ? 1000 : 10;
+        if (p < 0) p = 0;
+
+        float slowDownFactor = 0.01;
+        if (usingSafeD) slowDownFactor /= 10;
+        slowDownFactor *= exp(-prestigeAmount);
+        return 1 /  (1.0 + p * slowDownFactor);
     }
 
     override void update(double dt)
     {
         if (keyboard.isDown("escape")) exitGame;
-        points += dt * 0.2 * dmans;
-        dmans  += dt * 0.3 * farms;
-        farms  += dt * 0.4 * factories;
 
+        if (keyboard.isDown("return"))
+        {
+            // repeat last left clic
+            mousePressed(_mx, _my, MouseButton.left, 1);
+        }
+
+        // in case one of the cost was enabled
+
+        double slow = productionSlowdown();   
+
+        double dmanFactor = 1.0;
+        if (dmanThreeArms) dmanFactor = 1.5; 
+        if (dmanFourArms) dmanFactor = 2;
+
+        points += dt * 0.2 * slow * dmans;
+        dmans  += dt * 0.3 * slow * farms;
+        farms  += dt * 0.4 * slow * factories;
 
         if (points >= 10)
             dmanDiscovered = true;
         if (dmans >= 2)
             farmDiscovered = true;
-        if (farms >= 1)
+        if (farms >= 1 && farmDiscovered)
             factoryDiscovered = true;
     }
 
@@ -49,32 +90,70 @@ class Incremental : TurtleGame
     {
         if (button != MouseButton.left)
             return;
+        _mx = x;
+        _my = y;
         clicked = getClickable(x, y);
         final switch(clicked) with (Clickable)
         {
-            case none: break;
+            case none: 
+                break;
             case point: 
                 points += 1;
                 break; 
             case dman: 
-                while(points >= 10)
+                while(canBeBought(dman))
                 {
                     points -= 10;
                     dmans += 1;
                 }
                 break;
             case farm: 
-                while(points >= 100)
+                while(canBeBought(farm))
                 {
                     points -= 100;
                     farms += 1;
                 }
                 break;
             case factory: 
-                while(points >= 1000)
+                while(canBeBought(factory))
                 {
                     points -= 1000;
                     factories += 1;
+                }
+                break;
+
+            case dmanUpgrade1: 
+                while(canBeBought(dmanUpgrade1))
+                {
+                    points -= 300;
+                    dmanThreeArms = true;
+                }
+                break;
+            case dmanUpgrade2: 
+                while(canBeBought(dmanUpgrade2))
+                {
+                    points -= 600;
+                    dmanFourArms = true;
+                }
+                break;
+            case useVersionControl:
+                while(canBeBought(useVersionControl))
+                {
+                    points -= 2000;
+                    usingVersionControl = true;
+                }
+                break;
+            case useSafeD: 
+                while(canBeBought(useSafeD))
+                {
+                    points -= 3000;
+                    usingSafeD = true;
+                }
+                break;
+            case prestige: 
+                while(canBeBought(prestige))
+                {
+                    reset();
                 }
                 break;
         }    
@@ -87,8 +166,8 @@ class Incremental : TurtleGame
         clicked = Clickable.none;
     }
 
-    Clickable hovered;
-    Clickable clicked;
+    Clickable hovered; // last clickable pointed and buyable
+    Clickable clicked; // clickable being bought, if any
 
     enum Clickable
     {
@@ -96,7 +175,13 @@ class Incremental : TurtleGame
         point,
         dman,
         farm,
-        factory
+        factory,
+
+        dmanUpgrade1,
+        dmanUpgrade2,
+        useVersionControl,
+        useSafeD,
+        prestige
     }
     double points;
     double dmans;
@@ -105,6 +190,32 @@ class Incremental : TurtleGame
     bool dmanDiscovered;
     bool farmDiscovered;
     bool factoryDiscovered;
+    float _mx, _my;
+
+    bool dmanThreeArms;
+    bool dmanFourArms;
+    bool usingSafeD;
+    bool usingVersionControl;
+    double prestigeAmount;
+
+    bool canBeBought(Clickable c)
+    {
+        final switch(c) with(Clickable)
+        {
+            case none:    return true;
+            case point:   return true;
+            case dman:    return points >= 10;
+            case farm:    return points >= 100;
+            case factory: return points >= 1000;
+
+            case dmanUpgrade1: return points >= 300 && !dmanThreeArms;
+            case dmanUpgrade2: return points >= 600 && dmanThreeArms && !dmanFourArms;
+            case useVersionControl: return points >= 2000 && !usingVersionControl;
+            case useSafeD:     return points >= 3000 && !usingSafeD;
+            case prestige:     return points >= 10000;
+        }
+    }
+
 
     Clickable getClickable(float x, float y)
     {
@@ -119,23 +230,17 @@ class Incremental : TurtleGame
             return cx >= 3 && cx <= 31;
         }
 
-        if (cy == 0 && inButton(cx)) 
-        {
-            return Clickable.point;
-        }
-        if (cy == 1 && inButton(cx) && points >= 10) 
-        {
-            return Clickable.dman;            
-        }
-        if (cy == 2 && inButton(cx) && points >= 100) 
-        {
-            return Clickable.farm;
-        }
+        if (cy == 1 && inButton(cx)) return Clickable.point;
+        if (cy == 2 && inButton(cx)) return Clickable.dman;            
+        if (cy == 3 && inButton(cx)) return Clickable.farm;
+        if (cy == 4 && inButton(cx)) return Clickable.factory;
 
-        if (cy == 3 && inButton(cx) && points >= 1000) 
-        {
-            return Clickable.factory;
-        }
+        if (cy == 11 && inButton(cx)) return Clickable.dmanUpgrade1;
+        if (cy == 12 && inButton(cx)) return Clickable.dmanUpgrade2;            
+        if (cy == 13 && inButton(cx)) return Clickable.useVersionControl;
+        if (cy == 14 && inButton(cx)) return Clickable.useSafeD;
+        if (cy == 15 && inButton(cx)) return Clickable.prestige;
+
         return Clickable.none;
     }
 
@@ -143,10 +248,10 @@ class Incremental : TurtleGame
     {
         console.initialize(framebuffer, windowWidth, windowHeight);
 
-        void resource(string name, double amount)
+        void resource(string name, double amount, bool extraPrecise = false)
         {
             char[32] buf;
-            sprintf(buf.ptr, "%.1f", amount);
+            sprintf(buf.ptr, extraPrecise ? "%.3f" : "%.1f", amount);
             with(console)
             {
                 col(color("#ffffff")); 
@@ -154,37 +259,90 @@ class Incremental : TurtleGame
             }
         }
 
-        void description(string s)
+        void description(string s, Clickable which)
         {
-            console.cursor(50, console.textY); 
-            console.col(color("grey")); 
-            console.print(s);
+            if (hovered == which)
+            {
+                console.cursor(51, console.textY); 
+                console.col(color("grey")); 
+                console.print(s);
+            }
         }
+
+        void button(const(char)[] s, Clickable which, bool completed = false)
+        {
+            with (console)
+            {
+                bool underMouse = hovered == which;
+                bool click      = clicked == which;
+                bool buyable    = canBeBought(which);
+
+                if (completed)
+                {
+                    col(RGBA(128, 255, 128, 255));
+                }
+                else if (click)
+                    col(RGBA(255, 255, 200, 255));           
+                else if (!buyable)
+                    col(RGBA(140, 50, 50, 255));
+                else if (underMouse && buyable)
+                    col(RGBA(255, 255, 0, 255));
+                else
+                    col(RGBA(250, 250, 250, 255));
+
+                print(" [ ");
+                print(s);
+                print(" ] ");
+            }
+        }
+
         with(console)
         {
-            cursor(0, 0);
-            button("Write code                  ", hovered == Clickable.point, clicked == Clickable.point); 
-            resource("LOC:    ", points);          description("Write one line of code");
+            cursor(0, 0); col(color("cyan")); print("=== PRODUCTION ===");
+            cursor(0, 1);
+            button("Write code                  ", Clickable.point); 
+            resource("LOC:     ", points); description("Write one line of code", Clickable.point);
             
             if (dmanDiscovered)
             {
-                cursor(0, 1);
-                button("Buy D-man           (10 LOC)", hovered == Clickable.dman, clicked == Clickable.dman); 
-                resource("D-Man:  ", dmans);         description("Write 0.2 LOC / sec");
+                cursor(0, 2);
+                button("Buy D-man           (10 LOC)", Clickable.dman); 
+                resource("D-Man:   ", dmans); description("Write 0.2 LOC / sec", Clickable.dman);
             }
 
             if (farmDiscovered)
             {
-                cursor(0, 2);
-                button("Buy D-man farm     (100 LOC)", hovered == Clickable.farm, clicked == Clickable.farm);
-                resource("Farm:   ", farms);    description("Create 0.3 D-man / sec");
+                cursor(0, 3);
+                button("Buy D-man farm     (100 LOC)", Clickable.farm);
+                resource("Farm:    ", farms); description("Create 0.3 D-man / sec", Clickable.farm);
             }
 
             if (factoryDiscovered)
             {
-                cursor(0, 3);
-                button("Buy D-man factory   (1k LOC)", hovered == Clickable.factory, clicked == Clickable.factory); 
-                resource("Factory:", factories); description("Create 0.4 farm / sec");
+                cursor(0, 4);
+                button("Buy D-man factory   (1k LOC)", Clickable.factory); 
+                resource("Factory: ", factories); description("Create 0.4 farm / sec", Clickable.factory);
+            }
+
+            if (prestigeAmount > 1)
+            {
+                cursor(0, 5);
+                resource("Prestige: ", prestigeAmount);
+            }
+
+
+            cursor(0, 7);
+            col(color("grey"));
+            print("Because of code size, your production is reduced by factor =  "); resource("", productionSlowdown);
+
+            if (farms >= 2 || factories >= 1)
+            {
+                cursor(0, 10); col(color("cyan")); print("===  UPGRADES  ===");                
+                cursor(0, 11); button("Three-armed D-mans (300 LOC)", Clickable.dmanUpgrade1, dmanThreeArms); description("50% more code", Clickable.dmanUpgrade1);
+                cursor(0, 12); button("Four-armed D-mans  (600 LOC)", Clickable.dmanUpgrade2, dmanFourArms); description("again 50% more code", Clickable.dmanUpgrade2);
+                cursor(0, 13); button("Use version control (2k LOC)", Clickable.useVersionControl, usingVersionControl); description("LOC slowdown begins further", Clickable.useVersionControl);
+                cursor(0, 14); button("Use @safe D         (3k LOC)", Clickable.useSafeD, usingSafeD); description("Improves LOC slowdown", Clickable.useSafeD);
+                cursor(0, 15); button("Rewrite it all!    (10k LOC)", Clickable.prestige); description("Improve LOC growth situation", Clickable.prestige);
             }
         }
     }
@@ -249,20 +407,6 @@ struct Console
         print(s);
         textY += 1;
         textX = 0;
-    }
-
-    void button(const(char)[] s, bool hovered, bool clicked)
-    {
-        if (clicked)
-            col(RGBA(255, 255, 200, 255));           
-        else if (hovered)
-             col(RGBA(255, 255, 0, 255));
-        else
-            col(RGBA(250, 250, 250, 255));
-
-        print(" [ ");
-        print(s);
-        print(" ] ");
     }
 
     bool windowToConsoleCoord(float x, float y, out int consoleX, out int consoleY)
