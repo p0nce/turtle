@@ -1,0 +1,9 @@
+{
+  "name": "isometric-procgen",
+  "targetType": "executable",
+  "dependencies": {
+    "turtle": { "path": "../.." },
+    "vox-d": "~>1.0"
+  },
+  "versions": [ "SDL_209" ]
+}
