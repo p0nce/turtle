@@ -21,6 +21,17 @@ final class AOSMap
 {
 public:
 
+    box3i blueSpawnArea;
+    box3i greenSpawnArea;
+
+    vec3f goodSpawnPosition()
+    {
+        int x = blueSpawnArea.center.x; 
+        int y = blueSpawnArea.center.y;
+        int z = blueSpawnArea.center.z;
+        return vec3f(x + 0.5, y + 0.5, z + 1.5);
+    }
+
     this()
     {   
         _blocks.length = 512 * 512 * 64;
@@ -29,6 +40,17 @@ public:
     box3i worldBox()
     {
         return box3i(0, 0, 0, 512, 512, 62);
+    }
+
+    bool emptyAt(float x, float y, float z)
+    {
+        int ix = cast(int)(x);
+        int iy = cast(int)(y);
+        int iz = cast(int)(z);
+        if (!contains(ix, iy, iz))
+            return false;
+        else 
+            return !block(ix, iy, iz).isSolid;
     }
 
     bool contains(vec3i v)

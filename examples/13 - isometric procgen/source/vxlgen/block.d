@@ -33,6 +33,11 @@ struct Block
         isSolid = 0; 
     }
 
+    bool isOpaque() // for occlusion
+    {
+        return isSolid != 0;
+    }
+
     void setf(vec3f v) 
     { 
         setf(v.x, v.y, v.z);
