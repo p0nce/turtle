@@ -60,19 +60,17 @@ class MinesweeperExample : TurtleGame
     {
         ImageRef!RGBA fb = framebuffer();
 
-        if (gameWin)
+        with (console)
         {
-            drawDOSText(fb, DOSFontType.small8x8, 
-                        "WIN! Press ENTER to start a new game", 
-                        (elapsedTime() % 0.5f < 0.25f) ? NUMBERS_COLORS[1] : RGBA(0, 0, 0, 0),
-                        cast(int)(_S / 2), cast(int)(_S / 2), 0, _S / 16);
-        }
-        if (gameOver)
-        {
-            drawDOSText(fb, DOSFontType.small8x8, 
-                        "FAIL! Press ENTER to start a new game", 
-                        (elapsedTime() % 0.5f < 0.25f) ? NUMBERS_COLORS[7] : RGBA(0, 0, 0, 0),
-                        cast(int)(_S / 2), cast(int)(_S / 2), 0, _S / 16);
+            cls();
+            if (gameWin)
+            {
+                cprint("<lgreen><blink>WIN! Press ENTER to start a new game</blink></lgreen>");
+            }
+            if (gameOver)
+            {
+                cprint("<lred><blink>FAIL! Press ENTER to start a new game</blink></lred>");
+            }
         }
 
         with(canvas)

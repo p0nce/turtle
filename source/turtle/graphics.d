@@ -73,8 +73,8 @@ class Graphics : IGraphics, IRenderer
         {
             enum SDL_RENDERER_ACCELERATED = 0x00000002;
             enum SDL_RENDERER_PRESENTVSYNC = 0x00000004;
-            _renderer = SDL_CreateRenderer(_window, -1, SDL_RendererFlags.SDL_RENDERER_ACCELERATED 
-                                                      | SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
+            _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED 
+                                                      | SDL_RENDERER_PRESENTVSYNC);
         }
 
         _buffer = new OwnedImage!RGBA;
@@ -305,17 +305,9 @@ private:
     void loadSDLLibrary()
     {
         SDLSupport ret = loadSDL();
-        if(ret != sdlSupport) {
 
-            if(ret == SDLSupport.noLibrary) {
-                throw new Exception("SDL shared library failed to load.");
-            }
-            else if(SDLSupport.badLibrary) {
-                if ( loadedSDLVersion() < SDLSupport.sdl209 )
-                {
-                    throw new Exception("SDL One or more symbols failed to load.");
-                }
-            }
+        if(ret == SDLSupport.noLibrary) {
+            throw new Exception("SDL shared library failed to load.");
         }
     }
 

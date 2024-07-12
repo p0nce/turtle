@@ -3,6 +3,7 @@ module turtle.game;
 import core.stdc.string: strlen;
 import bindbc.sdl;
 import dplug.canvas;
+import textmode;
 import turtle.graphics;
 import turtle.renderer;
 import turtle.keyboard;
@@ -80,6 +81,13 @@ protected:
     Canvas* canvas()
     {
         return _frameCanvas;
+    }
+
+    /// Returns: A text-mode console.
+    /// You don't need to call render, turtle will do it.
+    TM_Console* console()
+    {
+        return &_console;
     }
 
     /// Returns: An ImageRef!RGBA spanning the whole screen.
@@ -180,6 +188,8 @@ private:
 
     IGraphics _graphics;
 
+    TM_Console _console;
+
     void run()
     {
         assert(!_gameShouldExit);
@@ -188,6 +198,8 @@ private:
         _mouse = new Mouse;
         _root = new Node;
         _uiContext = new UIContext; // By default, the "model" is the application object itself. 
+
+        _console.size(40, 25);
 
         _graphics = createGraphics();
         scope(exit) destroy(_graphics);   
@@ -324,10 +336,18 @@ private:
                 _windowWidth = width;
                 _windowHeight = height;
                 resized(_windowWidth, _windowHeight);
+                _console.outbuf(_framebuffer.pixels,
+                                _framebuffer.w,
+                                _framebuffer.h,
+                                _framebuffer.pitch);
             }
 
             // Draw overrides
             draw();
+
+            // Draw console on top
+            _console.render();
+
             _frameCanvas = null;
             _framebuffer = ImageRef!RGBA.init;
             renderer.endFrame();

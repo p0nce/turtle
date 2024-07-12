@@ -18,4 +18,6 @@ public import turtle.node2d;
 
 public import turtle.ui;
 
+public import textmode;
+
 
