@@ -27,6 +27,25 @@ class Keyboard
     ///ditto
     alias isPressed = isDown;
 
+    /// Returns: true if key is NOT pressed.
+    bool isUp(KeyConstant key)
+    {
+        return !isDown(key);
+    }
+    ///ditto
+    alias isUnpressed = isUp;
+
+    /// Returns: true if key is pressed. Mark it unpressed to avoid
+    /// a retrigger.
+    bool isDownOnce(KeyConstant key)
+    {
+        SDL_Keycode sdlk = getSDLKeycodeFromKey(key);
+        SDL_Scancode sdlsc = SDL_GetScancodeFromKey(sdlk);
+        bool r = _state[ sdlsc ];
+        markKeyAsReleased(sdlsc);
+        return r;
+    }
+
 package:
 
     static SDL_Keycode getSDLKeycodeFromKey(KeyConstant key)

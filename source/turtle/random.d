@@ -11,6 +11,12 @@ module turtle.random;
 public import std.random;
 import std.math;
 
+/// Returns: random integer in [min..max[
+int randInt(int min, int max)
+{
+    return min + cast(int)(uniform01() * (max - min));
+}
+
 /// Returns: Normal (Gaussian) random sample.
 /// See_also: Box-Muller algorithm.
 double randNormal(double mean = 0.0, double standardDeviation = 1.0)
