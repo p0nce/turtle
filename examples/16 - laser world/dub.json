@@ -1,0 +1,10 @@
+{
+  "name": "laser-world",
+  "targetType": "executable",
+  "dependencies": {
+    "turtle": { "path": "../.." },
+    "fast_noise": "~>1.0",
+    "gamut": "~>2.0"
+  },
+  "versions": [ "SDL_209" ]
+}
