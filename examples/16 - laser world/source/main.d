@@ -1,5 +1,6 @@
 import turtle;
 import world;
+import biomes;
 
 int main(string[] args)
 {
@@ -38,7 +39,7 @@ class LaserWorldExample : TurtleGame
 
     void createWorld(uint seed)
     {   
-        world = new World(seed, WX, WY);
+        world = new World(seed);
     }
 
     override void update(double dt)
