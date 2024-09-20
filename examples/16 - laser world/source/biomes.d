@@ -27,8 +27,8 @@ string biomeGraphics(BiomeType bt)
         case Empty: return "<on_black> </>";
         case DeepOcean: return "<black><on_blue>~</></>";
         case SomewhatDeepOcean: return "<grey><on_blue>~</></>";
-        case Ocean: return "<lgrey><on_lblue>~</></>";
-        case ShallowSea: return "<white><on_lblue>~</></>";
+        case Ocean: return "<lgrey><blink><on_lblue>~</></></>";
+        case ShallowSea: return "<white><blink><on_lblue>~</></></>";
         case Desert: return "<on_yellow> </on_yellow>";
         case Savanna: return "~";
         case TropicalRainforest: return "~";
