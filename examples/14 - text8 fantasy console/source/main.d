@@ -4,6 +4,7 @@ import std.file;
 
 import text8;
 
+// Note: this example is WIP and was not finished
 int main(string[] args)
 {
     ubyte[] rom = null;
