@@ -384,7 +384,7 @@ struct Console
     void initialize(ImageRef!RGBA frame, float windowW, float windowH)
     {
         this.frame = frame;
-        this.textColor = color("white");
+        this.textColor = RGBA(255, 255, 255, 255);
         this.textX = 0;
         this.textY = 0;
         int scaleX = cast(int)(windowW / (COLUMNS*CHAR_WIDTH ));
@@ -397,6 +397,12 @@ struct Console
     void col(RGBA c)
     {
         textColor = c;
+    }
+
+    void col(Color c)
+    {
+        RGBA8 c8 = c.toRGBA8;
+        textColor = RGBA(c8.r, c8.g, c8.b, c8.a);
     }
 
     void cursor(int x, int y)
