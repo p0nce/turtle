@@ -1,0 +1,9 @@
+{
+  "name": "canvas-vs-canvasity",
+  "targetType": "executable",
+  "license":  "BSL-1.0",
+  "dependencies": {
+    "turtle": { "path": "../.." }
+  },
+  "versions": [ "SDL_209", "LUA_51" ]
+}

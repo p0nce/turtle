@@ -1,73 +1,86 @@
 import turtle;
-import std.stdio;
-import std.file;
 
-import text8;
-
-// Note: this example is WIP and was not finished
 int main(string[] args)
 {
-    ubyte[] rom = null;
-    if (args.length == 2)
-    {
-        rom = cast(ubyte[]) std.file.read(args[1]);
-    }
-    runGame(new Text8Run(rom));
+    runGame(new CanvasComparisonExample);
     return 0;
 }
 
-class Text8Run : TurtleGame
+// left: drawing with canvas
+// right: drawing with canvasity
+
+class CanvasComparisonExample : TurtleGame
 {
-    this(ubyte[] rom)
-    {
-        this.rom = rom;
-
-        // Create interpreter and eval whole file.
-        vm = new Text8VM;
-        if (rom) vm.load(rom);
-    }
-
-    ubyte[] rom;
-
     override void load()
     {
-        setBackgroundColor( color("#444") );
-        vm.callInit();
-        dtDebt = 0;
-    }
-
-    override void keyPressed(KeyConstant key)
-    {
-        // Note: turtle happens to give zero-terminated key constants.
-        vm.callKeydown(key.ptr);
+        setBackgroundColor( color("#ffffff") );
     }
 
     override void update(double dt)
     {
         if (keyboard.isDown("escape")) exitGame;
-
-        // run at fixed FPS
-        dtDebt += dt;
-        if (dtDebt > 1.0)
-            dtDebt = 1.0;
-
-        double FRAME_TIME = 1.0 / 60;
-
-        while (dtDebt >= FRAME_TIME)
-        {
-            vm.callStep();
-            dtDebt -= FRAME_TIME;
-        }
+        rotation += dt*0.05;
     }
+
+    double rotation = 0;
 
     override void draw()
     {
-        vm.render(console());
+        float W = windowWidth;
+        float H = windowHeight;
+        with(canvas)
+        {
+            fillStyle = "rgba(0, 0, 0, 0.3)";
+            
+            translate(W/3, H/2);
+            scale(40, 40);
+
+            foreach (n; 0..4)
+            {
+                scale(0.7,0.7);
+                rotate(rotation);
+
+                beginPath();
+                    moveTo(-0.5, -1);
+                    lineTo( 0, -30);
+                    lineTo(+0.5, -1);
+                    lineTo(+3,  0);
+                    lineTo(+1, +1);
+                    lineTo( 0, +3);
+                    lineTo(-1, +1);
+                    lineTo(-3,  0);
+                closePath();
+                fill();
+            }
+        }
+
+        with(canvasity)
+        {
+            // Note: because of gamma-aware blending, you need 2x
+            // more opacity to match dplug:canvas!
+            fillStyle = "rgba(0, 0, 0, 0.5)";
+
+            translate(2*W/3, H/2);
+            scale(40, 40);
+            
+
+            foreach (n; 0..4)
+            {
+                scale(0.7,0.7);
+                rotate(rotation);
+
+                beginPath();                
+                    moveTo(-0.5, -1);
+                    lineTo( 0, -30);
+                    lineTo(+0.5, -1);
+                    lineTo(+3,  0);
+                    lineTo(+1, +1);
+                    lineTo( 0, +3);
+                    lineTo(-1, +1);
+                    lineTo(-3,  0);
+                closePath();
+                fill();
+            }
+        }
     }
-
-    int screenWidth;
-    int screenHeight;
-    Text8VM vm;
-
-    double dtDebt;
 }
