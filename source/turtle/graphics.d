@@ -19,6 +19,8 @@ else
 
 import turtle.renderer;
 import dplug.graphics;
+import gamut;
+import canvasity;
 
 IGraphics createGraphics()
 {
@@ -179,7 +181,10 @@ class Graphics : IGraphics, IRenderer
     // IRenderer
 
     /// Start drawing, return a Canvas initialized to the drawing area.
-    override void beginFrame(RGBA8 clearColor, Canvas** canvas, ImageRef!RGBA* framebuffer)
+    override void beginFrame(RGBA8 clearColor, 
+                             Canvas** canvas, 
+                             Canvasity** canvasity,
+                             ImageRef!RGBA* framebuffer)
     {
  
         // Get size of window.
@@ -220,8 +225,19 @@ class Graphics : IGraphics, IRenderer
                     scan[x] = blendColor(col, scan[x], col.a);
             }
         }
+
+        // Initialize the canvases
         _canvas.initialize(_buffer.toRef());
         *canvas = &_canvas;
+
+        {
+            Image view;
+            view.createViewFromData(_buffer.toRef().pixels, _buffer.w, _buffer.h, 
+                                     PixelType.rgba8, cast(int)_buffer.toRef().pitch);
+            _canvasity.initialize(view);
+        }
+
+
         *framebuffer = _buffer.toRef();
     }
 
@@ -276,6 +292,7 @@ private:
     SDL_Renderer* _renderer;
     SDL_Texture* _texture;
     Canvas _canvas;
+    Canvasity _canvasity;
     OwnedImage!RGBA _buffer;    
 
     int _lastKnownWidth = 0;

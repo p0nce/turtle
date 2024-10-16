@@ -11,6 +11,7 @@ import turtle.keyboard;
 import turtle.mouse;
 import turtle.node2d;
 import turtle.ui.uicontext;
+import canvasity;
 
 /// Inherit from this to make a game.
 class TurtleGame
@@ -82,6 +83,13 @@ protected:
     Canvas* canvas()
     {
         return _frameCanvas;
+    }
+
+    /// Returns: A better canvas, but slower for filling.
+    //           This call can only be made inside a `draw` override.
+    Canvasity* canvasity()
+    {
+        return _frameCanvasity;
     }
 
     /// Returns: A text-mode console.
@@ -179,6 +187,7 @@ protected:
 
 private:
     Canvas* _frameCanvas = null;
+    Canvasity* _frameCanvasity = null;
     ImageRef!RGBA _framebuffer;
     float _windowWidth = 0.0f, 
           _windowHeight = 0.0f;
@@ -336,7 +345,11 @@ private:
             IRenderer renderer = _graphics.getRenderer();
 
             Canvas* canvas;
-            renderer.beginFrame(_backgroundColor, &canvas, &_framebuffer);
+            Canvasity* canvasity;
+            renderer.beginFrame(_backgroundColor, 
+                                &canvas, 
+                                &canvasity,
+                                &_framebuffer);
 
             int width, height;
             renderer.getFrameSize(&width, &height);
