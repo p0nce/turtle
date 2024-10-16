@@ -179,7 +179,7 @@ class Graphics : IGraphics, IRenderer
     // IRenderer
 
     /// Start drawing, return a Canvas initialized to the drawing area.
-    override void beginFrame(RGBA clearColor, Canvas** canvas, ImageRef!RGBA* framebuffer)
+    override void beginFrame(RGBA8 clearColor, Canvas** canvas, ImageRef!RGBA* framebuffer)
     {
  
         // Get size of window.
@@ -210,12 +210,14 @@ class Graphics : IGraphics, IRenderer
         else
         {
             // blend color with previous to make a cheap motion blur
+            RGBA col = RGBA(clearColor.r, clearColor.g,
+                            clearColor.b, clearColor.a);
             for (int y = 0; y < _lastKnownHeight; ++y)
             {
                 RGBA[] scan = _buffer.scanline(y);
 
                 for (size_t x = 0; x < scan.length; ++x)
-                    scan[x] = blendColor(clearColor, scan[x], clearColor.a);
+                    scan[x] = blendColor(col, scan[x], col.a);
             }
         }
         _canvas.initialize(_buffer.toRef());
@@ -223,13 +225,15 @@ class Graphics : IGraphics, IRenderer
         *framebuffer = _buffer.toRef();
     }
 
-    void fillWithClearColor(RGBA clearColor)
+    void fillWithClearColor(RGBA8 clearColor)
     {
         // Clear buffer with clear color, even if alpha isn't 255
+        RGBA col = RGBA(clearColor.r, clearColor.g,
+                        clearColor.b, clearColor.a);
         for (int y = 0; y < _lastKnownHeight; ++y)
         {
             RGBA[] scan = _buffer.scanline(y);
-            scan[0.._lastKnownWidth] = clearColor; 
+            scan[0.._lastKnownWidth] = col; 
         }
     }
 

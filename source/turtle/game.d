@@ -3,6 +3,7 @@ module turtle.game;
 import core.stdc.string: strlen;
 import bindbc.sdl;
 import dplug.canvas;
+import colors;
 import textmode;
 import turtle.graphics;
 import turtle.renderer;
@@ -146,9 +147,20 @@ protected:
     }
 
     /// Changes the clear color to fill the screen with.
-    void setBackgroundColor(RGBA color)
+    void setBackgroundColor(Color col)
     {
-        _backgroundColor = color;
+        _backgroundColor = col.toRGBA8;
+    }
+    ///ditto
+    void setBackgroundColor(RGBA col)
+    {
+        RGBA8 r8 = RGBA8(col.r, col.g, col.b, col.a);
+        _backgroundColor = r8;
+    }
+    ///ditto
+    void setBackgroundColor(const(char)[] col)
+    {
+        _backgroundColor = color(col).toRGBA8;
     }
 
     /// Changes the title of the window.
@@ -177,7 +189,7 @@ private:
 
     double _elapsedTime = 0, _deltaTime = 0;
 
-    RGBA _backgroundColor = RGBA(0, 0, 0, 255);
+    RGBA8 _backgroundColor = RGBA8(0, 0, 0, 255);
 
     Keyboard _keyboard;
     Mouse _mouse;

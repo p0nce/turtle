@@ -6,8 +6,7 @@ public import dplug.math.vector;
 public import dplug.math.matrix;
 
 public import dplug.graphics;
-
-public import turtle.color;
+public import colors;
 public import turtle.graphics;
 public import turtle.renderer;
 public import turtle.random;

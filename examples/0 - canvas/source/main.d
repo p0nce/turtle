@@ -37,8 +37,8 @@ class CanvasExample : TurtleGame
                     int r = 255 - layer * 32;
                     int g = 64 + layer * 16;
                     int b = 128;
-                    gradient.addColorStop(0, color(r, g, b, 255));
-                    gradient.addColorStop(1, color(r/2, g/3, b/2, 255));
+                    gradient.addColorStop(0, rgba(r, g, b, 1.0));
+                    gradient.addColorStop(1, rgba(r/2, g/3, b/2, 1.0));
 
                     fillStyle = gradient;
 
@@ -57,7 +57,7 @@ class CanvasExample : TurtleGame
 
                 canvas.globalCompositeOperation = (layer%2) ? CompositeOperation.add : CompositeOperation.subtract;
                 rotate(- elapsedTime * (0.5 + layer * 0.1));
-                fillStyle = RGBA((128^layer)&255, 128>>layer, 128, 64);
+                fillStyle = rgba((128^layer)&255, 128>>layer, 128, 0.25);
                 beginPath();
                     moveTo(-0.2, -15);
                     lineTo(+0.2, -15);

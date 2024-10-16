@@ -22,7 +22,7 @@ class MinesweeperExample : TurtleGame
 
     override void load()
     {
-        setBackgroundColor( RGBA(0, 11, 28, 255) );
+        setBackgroundColor( rgba(0, 11, 28, 1.0) );
         makeNewGrid();
 
         mixer = mixerCreate();
@@ -80,7 +80,7 @@ class MinesweeperExample : TurtleGame
             translate(_marginX , _marginY);
             scale(_S, _S);
 
-            fillStyle = color(255, 0, 0, 255);
+            fillStyle = rgba(255, 0, 0, 1.0);
 
             for (int y = 0; y < GY; ++y)
             {
@@ -122,14 +122,19 @@ class MinesweeperExample : TurtleGame
                             int textX = cast(int)(0.5 + _marginX + x * _S + 4 * textScale);
                             int textY = cast(int)(0.5 + _marginY + y * _S + 4 * textScale);
 
-                            RGBA textColor;
+                            // TODO: replace by console usage
+                            RGBA8 textColor;
+                            RGBA col;
                             if (ch == '*')
-                                textColor = color("#9d4e24");
+                            {
+                                textColor = color("#9d4e24").toRGBA8;
+                                col = RGBA(textColor.r, textColor.g, textColor.b, textColor.a);
+                            }
                             else
                             {
-                                textColor = NUMBERS_COLORS[ch - '0'];
+                                col = NUMBERS_COLORS[ch - '0'];
                             }
-                            drawDOSText(fb, DOSFontType.small8x8, (&ch)[0..1], textColor,
+                            drawDOSText(fb, DOSFontType.small8x8, (&ch)[0..1], col,
                                         textX, textY, 0, textScale);
                         }
                     }

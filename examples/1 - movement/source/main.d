@@ -38,7 +38,7 @@ class MovementExample : TurtleGame
             float zoom = 50.0f * (windowHeight / 720);
             scale(zoom, zoom);
             translate(posx, posy);
-            fillStyle = color(255, 0, 0, 255);
+            fillStyle = rgba(255, 0, 0, 1.0);
 
             beginPath();
                 moveTo(-1, -1);
