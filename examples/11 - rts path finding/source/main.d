@@ -50,7 +50,7 @@ class RTSPathFinding : TurtleGame
 
         auto frame = framebuffer;
 
-        RGBA textCol = color("yellow");
+        RGBA textCol = RGBA(255, 255, 0, 255);
         int y = cast(int)screenHeight - 96;
         drawDOSText(frame, DOSFontType.large8x16, "Hold mouse left to add wall", textCol, 16, y); y += 16;
         frame.drawDOSText(DOSFontType.large8x16, "Hold mouse right to remove wall", textCol, 16, y); y += 16;

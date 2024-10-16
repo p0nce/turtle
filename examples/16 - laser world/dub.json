@@ -4,7 +4,7 @@
   "dependencies": {
     "turtle": { "path": "../.." },
     "fast_noise": "~>1.0",
-    "gamut": "~>2.0"
+    "gamut": "~>3.0"
   },
   "versions": [ "SDL_209" ]
 }
