@@ -235,6 +235,7 @@ class Graphics : IGraphics, IRenderer
             view.createViewFromData(_buffer.toRef().pixels, _buffer.w, _buffer.h, 
                                      PixelType.rgba8, cast(int)_buffer.toRef().pitch);
             _canvasity.initialize(view);
+            *canvasity = &_canvasity;
         }
 
 

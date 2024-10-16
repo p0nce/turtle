@@ -354,7 +354,10 @@ private:
             int width, height;
             renderer.getFrameSize(&width, &height);
 
+            assert(canvas);
+            assert(canvasity);
             _frameCanvas = canvas;
+            _frameCanvasity = canvasity;
 
             if (_windowWidth != width || _windowHeight != height)
             {
