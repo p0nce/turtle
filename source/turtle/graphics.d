@@ -250,7 +250,11 @@ class Graphics : IGraphics, IRenderer
         for (int y = 0; y < _lastKnownHeight; ++y)
         {
             RGBA[] scan = _buffer.scanline(y);
-            scan[0.._lastKnownWidth] = col; 
+
+            // PERF: this is unbeliavably slow!
+            // LDC unable to vectorize a struct array op
+            // TODO replace with int fill
+            scan[0.._lastKnownWidth] = col;
         }
     }
 
