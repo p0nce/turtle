@@ -250,11 +250,9 @@ class Graphics : IGraphics, IRenderer
         for (int y = 0; y < _lastKnownHeight; ++y)
         {
             RGBA[] scan = _buffer.scanline(y);
+          //  scan[0.._lastKnownWidth] = col; 
 
-            // PERF: this is unbeliavably slow!
-            // LDC unable to vectorize a struct array op
-            // TODO replace with int fill
-            scan[0.._lastKnownWidth] = col;
+            memset32(&scan[0], *cast(int*)(&col), _lastKnownWidth);
         }
     }
 
@@ -298,12 +296,18 @@ private:
     SDL_Texture* _texture;
     Canvas _canvas;
     Canvasity _canvasity;
-    OwnedImage!RGBA _buffer;    
+    OwnedImage!RGBA _buffer; 
 
     int _lastKnownWidth = 0;
     int _lastKnownHeight = 0;
 
     bool _isFullscreen = false;
+
+    static void memset32(void* dest, int value, size_t count)
+    {
+        int* buf = cast(int*) dest;
+        while(count--) *buf++ = value;
+    }
 
     void toggleFullscreen()
     {
