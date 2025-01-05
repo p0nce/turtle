@@ -2,8 +2,7 @@
   "name": "rawrender",
   "targetType": "executable",
   "dependencies": {
-    "turtle": { "path": "../.." },
-    "vox-d": "~>1.0"
+    "turtle": { "path": "../.." }
   },
   "versions": [ "SDL_209" ]
 }

@@ -2,7 +2,6 @@ import turtle;
 
 import dplug.core;
 import dplug.graphics;
-import voxd;
 
 int main(string[] args)
 {
@@ -15,6 +14,12 @@ class RawRenderExample : TurtleGame
     override void load()
     {
         setBackgroundColor( color("black") );
+
+        // Stick the text console to top-right
+        TM_Options opt;
+        opt.halign = TM_horzAlignRight;
+        opt.valign = TM_vertAlignTop;
+        console.options(opt);        
     }
 
     enum GRID_SUBSAMPLING = 2;
@@ -58,6 +63,28 @@ class RawRenderExample : TurtleGame
                 canvas.fillStyle = RGBA(255, 0, 0, 128);
                 canvas.fillRect(buttonBox(type).shrink(8));
             }
+        }
+
+        // Show console
+        {
+            console.cls;
+            int x = console.columns() - 19;
+            console.box(x, 0, 19, 7, TM_boxLargeH);
+            console.locate(x+2, 2);
+            final switch(current)
+            {
+                case CellType.sand: 
+                    console.cprint("Selected: <yellow>sand</yellow>"); 
+                    break;
+                case CellType.water: 
+                    console.cprint("Selected: <lblue>water</lblue>"); 
+                    break;
+                case CellType.empty: 
+                    console.cprint("Selected: empty"); 
+                    break;
+            }
+            console.locate(x+2, 4);
+            console.cprint("<lcyan>LMB</lcyan>=Add <lcyan>RMB</lcyan>=Del");
         }
     }      
 
