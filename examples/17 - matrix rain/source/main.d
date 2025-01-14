@@ -19,7 +19,7 @@ class MatrixRainExample : TurtleGame
     {
         setBackgroundColor(color("#000000"));
         console.size(80, 25);
-        console.palette(TM_Palette.vintage);
+        console.palette(TM_paletteVintage);
 
         rainDrops = new int[80];
         symbols = new char[80];
@@ -57,16 +57,16 @@ class MatrixRainExample : TurtleGame
                     locate(cast(int)x, y);
                     if (y == drop)
                     {
-                        fg(TM_white);
-                        style(TM_shiny);
+                        fg(TM_colorWhite);
+                        style(TM_styleShiny);
                         print(symbols[x]);
                     }
                     else if (y < drop && y >= drop - 5)
                     {
-                        fg(TM_green);
+                        fg(TM_colorGreen);
                         int intensity = 15 - (drop - y) * 3;
-                        style(cast(TM_Style)0);
-                        if (intensity > 10) style(TM_shiny);
+                        style(TM_styleNone);
+                        if (intensity > 10) style(TM_styleShiny);
                         print(cast(char)uniform(33, 127));
                     }
                 }

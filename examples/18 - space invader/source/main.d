@@ -50,7 +50,7 @@ class SpaceInvadersExample : TurtleGame
         opt.blurAmount = 2.0f;
         console.options(opt);
         console.size(30, 22);
-        console.palette(TM_Palette.tango);
+        console.palette(TM_paletteTango);
     }
 
     override void update(double dt)
@@ -147,11 +147,11 @@ class SpaceInvadersExample : TurtleGame
 
             // Draw player
             locate(playerX, playerY);
-            fg(TM_green);
+            fg(TM_colorGreen);
             cprint("<shiny><bold>A</></>");
 
             // Draw invaders
-            fg(TM_red);
+            fg(TM_colorRed);
             foreach (x; invaderX)
             {
                 if (x != -1)
@@ -165,7 +165,7 @@ class SpaceInvadersExample : TurtleGame
             if (bulletY > -1)
             {
                 locate(bulletX, bulletY);
-                fg(TM_yellow);
+                fg(TM_colorYellow);
                 cprint("<shiny>|</shiny>");
             }
 
@@ -173,24 +173,24 @@ class SpaceInvadersExample : TurtleGame
             {
                 // Display game over message
                 locate(10, 10);
-                fg(TM_red);
+                fg(TM_colorRed);
                 print("GAME OVER");
                 locate(3, 12);
-                fg(TM_white);
+                fg(TM_colorWhite);
                 print("Press SPACE to RESTART");
             }
             else
             {
                 // Draw score and level
                 locate(0, 0);
-                fg(TM_white);
+                fg(TM_colorWhite);
                 print("Level: ");
-                fg(TM_cyan);
+                fg(TM_colorCyan);
                 print(level.to!string);
                 locate(0, 1);
-                fg(TM_white);
+                fg(TM_colorWhite);
                 print("Score: ");
-                fg(TM_cyan);
+                fg(TM_colorCyan);
                 print(score.to!string);
             }
         }

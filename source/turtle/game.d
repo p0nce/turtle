@@ -220,6 +220,7 @@ private:
         _root = new Node;
         _uiContext = new UIContext; // By default, the "model" is the application object itself. 
 
+        // Default console size, you can change it in your `load()` function.
         _console.size(40, 25);
 
         _graphics = createGraphics();
@@ -421,10 +422,10 @@ MouseButton convertSDLButtonToMouseButton(int button)
 {
     switch(button)
     {
-        case SDL_BUTTON_LEFT: return MouseButton.left;
-        case SDL_BUTTON_RIGHT: return MouseButton.right;
-        case SDL_BUTTON_X1: return MouseButton.x1;
-        case SDL_BUTTON_X2: return MouseButton.x2;
+        case SDL_BUTTON_LEFT:   return MouseButton.left;
+        case SDL_BUTTON_RIGHT:  return MouseButton.right;
+        case SDL_BUTTON_X1:     return MouseButton.x1;
+        case SDL_BUTTON_X2:     return MouseButton.x2;
         case SDL_BUTTON_MIDDLE: return MouseButton.middle;
         default:
             assert(false);
