@@ -19,7 +19,7 @@ class CanvasComparisonExample : TurtleGame
     override void update(double dt)
     {
         if (keyboard.isDown("escape")) exitGame;
-        rotation += dt*0.05;
+        rotation += dt*0.08;
     }
 
     double rotation = 0;
@@ -28,16 +28,48 @@ class CanvasComparisonExample : TurtleGame
     {
         float W = windowWidth;
         float H = windowHeight;
+
+
+        // Note: this example highlight
+        // how different sucessive blending becomes when
+        // the blending is or not gamma-aware.
+        // Here colors are approximately match but can't help
+        // the drift toward black of sRGB blending in dplug:canvas
+
+
+        string[7] COLORS = [
+            "rgba(0, 0, 0, 0.3)",
+            "rgba(255, 0, 0, 0.3)",
+            "rgba(0, 255, 0, 0.3)",
+            "rgba(0, 0, 255, 0.3)",
+            "rgba(255, 255, 0, 0.3)",
+            "rgba(0, 255, 255, 0.3)",
+            "rgba(255, 0, 255, 0.3)",
+        ];
+
+        // Note: because of gamma-aware blending, you need
+        // more opacity to match dplug:canvas!
+        string[7] COLORSity = [
+            "rgba(0, 0, 0, 0.5)",
+            "rgba(255, 0, 0, 0.5)",
+            "rgba(0, 255, 0, 0.5)",
+            "rgba(0, 0, 255, 0.5)",
+            "rgba(255, 255, 0, 0.5)",
+            "rgba(0, 255, 255, 0.5)",
+            "rgba(255, 0, 255, 0.5)",
+        ];
+
         with(canvas)
         {
-            fillStyle = "rgba(0, 0, 0, 0.3)";
+            
             
             translate(W/3, H/2);
             scale(40, 40);
 
-            foreach (n; 0..4)
+            foreach (n; 0..10)
             {
-                scale(0.7,0.7);
+                fillStyle = COLORS[n % 7];
+                scale(0.8,0.8);
                 rotate(rotation);
 
                 beginPath();
@@ -54,19 +86,23 @@ class CanvasComparisonExample : TurtleGame
             }
         }
 
+        with(console)
+        {
+            cls;
+            println("Left: dplug:canvas    Right: canvasity");
+        }
+
         with(canvasity)
         {
-            // Note: because of gamma-aware blending, you need 2x
-            // more opacity to match dplug:canvas!
-            fillStyle = "rgba(0, 0, 0, 0.5)";
-
+            
             translate(2*W/3, H/2);
             scale(40, 40);
             
 
-            foreach (n; 0..4)
+            foreach (n; 0..10)
             {
-                scale(0.7,0.7);
+                fillStyle = COLORSity[n % 7];
+                scale(0.8,0.8);
                 rotate(rotation);
 
                 beginPath();                
