@@ -1,6 +1,10 @@
 module constants;
 
 import std.random;
+import dplug.core.vec;
+
+enum int 
+    MAX_PLAYERS = 8;
 
 enum int
     BULLET_STATE_ALIVE = 1,
@@ -82,6 +86,12 @@ enum int
 enum int
     INVINCIBILITY_DURATION = 52;
 
+enum int
+    END_NOT_YET = 0,
+    END_EVERYONE_IS_DEAD = 1,
+    END_IA_WIN = 2,
+    END_PLAYER_WIN = 3;
+
 
 enum int
     PLAYERS_DO_EXPLODE = 0;
@@ -136,4 +146,11 @@ int randInt(int a, int b)
 void fillArray(T)(T[] a, T e)
 {
     a[] = e;
+}
+
+
+void fillArray(T)(ref Vec!T a, T e)
+{
+    T[] s = a[];
+    s[] = e;
 }

@@ -54,6 +54,9 @@ struct World
     int _heightMask;
     Vec!int _array;
 
+    int width(){return _width;}
+    int height(){return _height;}
+
     this(int w_log_2, int h_log_2)
     {
         this._width_shift = w_log_2;

@@ -2,7 +2,7 @@ module audiomanager;
 
 import core.stdc.math: sqrt;
 
-struct AudioManager
+class AudioManager
 {
 	double _time;
 	int _worldWidthMask;
