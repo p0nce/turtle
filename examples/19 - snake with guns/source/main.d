@@ -66,6 +66,10 @@ class SnakeExample : TurtleGame
         _game = new SnakeGame(_textures, _audio, 6, 1);
     }
 
+    override void keyPressed(KeyConstant key)
+    {
+        _game.keydown(key);
+    }
 }
 
 int main(string[] args)

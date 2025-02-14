@@ -122,6 +122,15 @@ class SnakeGame
         _viewports[0].render(fb);
     }
 
+    void keydown(string evt)
+    {
+        if (evt == "up") players[0].pushCommand(COMMAND_UP);
+        if (evt == "down") players[0].pushCommand(COMMAND_DOWN);
+        if (evt == "left") players[0].pushCommand(COMMAND_LEFT);
+        if (evt == "right") players[0].pushCommand(COMMAND_RIGHT);
+        if (evt == "space") players[0].pushCommand(COMMAND_SHOOT);
+    }
+
     void update()
     {
         
