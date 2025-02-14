@@ -10,7 +10,7 @@ class SnakeExample : TurtleGame
 {
     TextureManager _textures;
     AudioManager _audio;
-    Game _game;
+    SnakeGame _game;
 
     override void load()
     {
@@ -28,24 +28,42 @@ class SnakeExample : TurtleGame
         _textures.add("img/eyes.png", 16, 256);
 
         newGame();
+        time = 0;
+        needRender = true;
     }
+
+    enum double FPS = 20;
+    enum double TIME_PER_FRAME = 1.0 / FPS;
+    double time;
+    bool needRender;
 
     override void update(double dt)
     {
         console.update(dt);
         if (keyboard.isDownOnce("escape")) exitGame();
-        
+
+        // original game work with fixed physics
+        if (dt > 1)
+            dt = 1;        
+        time += dt;
+        while(time > TIME_PER_FRAME)
+        {
+            time -= TIME_PER_FRAME;
+            _game.update();
+            needRender = true;
+        }        
     }
 
     override void draw()
     {
         ImageRef!RGBA fb = framebuffer();
-        _game.render(fb);
+        if (needRender) _game.render(fb);
+        needRender = false;
     }
 
     void newGame()
     {
-        _game = new Game(_textures, _audio, 6, 1);
+        _game = new SnakeGame(_textures, _audio, 6, 1);
     }
 
 }

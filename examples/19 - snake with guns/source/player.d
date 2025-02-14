@@ -14,7 +14,7 @@ class Player
     int _posy;
     int _movx, _movy;
     int _dir;
-    Game _game;
+    SnakeGame _game;
     World* _world;
     int _state;
     int _team;
@@ -36,7 +36,7 @@ class Player
     Vec!int _queueData;
     Vec!int _commandQueue;
 
-    this(Game game, bool isHuman, int team, int px, int py, int dir)
+    this(SnakeGame game, bool isHuman, int team, int px, int py, int dir)
     {
         _game = game;
         _state = STATE_ALIVE;
@@ -205,65 +205,18 @@ class Player
             this._game._audioManager.playSampleLocation(/* tron.SAMPLE_SHOOT */ 0, 1.0, mx, my);
         }
     }
-    
-}
 
-
-/+
-
-tron.TURN_PROBABILITY = [-1.0, 0.999, 0.9, 0.7, 0.4, 0.3, 0.2, 0.1, 0.05, 0.025];
-
-
-tron.Player.prototype = {
-
-    
-    turnLeftDirection: function(dir)
+    void turnLeft()
     {
-        switch (dir)
-        {
-            case /* tron.DIR_UP */ 0:
-                return /* tron.DIR_LEFT */ 2;               
-            case /*tron.DIR_DOWN */ 1:
-                return /* tron.DIR_RIGHT */ 3;              
-            case /* tron.DIR_LEFT */ 2:
-                return /*tron.DIR_DOWN */ 1;                
-            case /* tron.DIR_RIGHT */ 3:
-                return /* tron.DIR_UP */ 0;
-            //default:
-            //  return 
-        }
-    },
-        
-    turnRightDirection: function(dir)
+        setDirection(turnLeftDirection(_dir));
+    }
+
+    void turnRight()
     {
-        switch (dir)
-        {
-            case /* tron.DIR_UP */ 0:
-                return /* tron.DIR_RIGHT */ 3;
-            case /*tron.DIR_DOWN */ 1:              
-                return /* tron.DIR_LEFT */ 2;
-            case /* tron.DIR_LEFT */ 2:
-                return /* tron.DIR_UP */ 0;
-            case /* tron.DIR_RIGHT */ 3:
-                return /*tron.DIR_DOWN */ 1;
-            default:
-                
-        }
-    },
-    
-    turnLeft: function()
-    {
-        var d = this.turnLeftDirection(this._dir);
-        this.setDirection(d);
-    },
-    
-    turnRight: function()
-    {
-        var d = this.turnRightDirection(this._dir);
-        this.setDirection(d);
-    },
-    
-    direction2command: function()
+        setDirection(turnRightDirection(_dir));
+    }
+
+    int direction2command()
     {
         switch (this._dir)
         {
@@ -275,62 +228,388 @@ tron.Player.prototype = {
                 return /* tron.COMMAND_LEFT */ 2;
             case /* tron.DIR_RIGHT */ 3:
                 return /* tron.COMMAND_RIGHT */ 3;
+            default: assert(0);
         }
-    },
-    
-    executeCommand: function(cmd)
+    }
+
+    void executeCommand(int cmd)
     {
         switch (cmd)
         {
-            
             case 0:
             case 1:
             case 2:
             case 3:
                 this.setDirection(cmd);
                 return;
-                
-            case /* tron.COMMAND_TURN_LEFT */ 4:
+
+            case COMMAND_TURN_LEFT:
                 this.turnLeft();
                 return;
-            case /* tron.COMMAND_TURN_RIGHT */ 5:
+            case COMMAND_TURN_RIGHT:
                 this.turnRight();
                 return;
-            case /* tron.COMMAND_SHOOT */ 6:
+            case COMMAND_SHOOT:
                 this.shoot();
-                return;     
+                return;   
+
+            default:
+                assert(false);
         }       
-    },
-   
- 
-    
-    pushCommand: function(cmd)
+    }
+
+    void pushCommand(int cmd)
     {
-        if (this._state !== /* tron.STATE_ALIVE */ 1) 
+        if (_state != STATE_ALIVE)
+            return;
+        if (_commandIndex < 40) // not full ?
+            _commandQueue[_commandIndex++] = cmd;
+    }
+
+    int popCommand()
+    {
+        int res = _commandQueue[0];
+        _commandIndex--;
+        int remaining = _commandIndex;
+        for (int i = 0; i < remaining; ++i) 
+        {
+            _commandQueue[i] = _commandQueue[i + 1];
+        }
+        return res;
+    }
+
+    // one game tick
+    void update(bool turboCycle)
+    {
+        if (this._state != STATE_ALIVE) 
         {
             return;
         }
-        
-        if (this._commandIndex < /* tron.COMMAND_QUEUE_LENGTH */ 40) // not full ?
+        if (turboCycle && !(_turbo)) return;
+
+        _waitforshoot = _waitforshoot - 1;
+        if (_waitforshoot<0) _waitforshoot = 0;
+
+        if (this._commandIndex > 0.5) 
         {
-            this._commandQueue[this._commandIndex] = cmd;
-            (this._commandIndex)++;
+            if (turboCycle)
+            {
+                this._commandIndex = 0; // erase all commands
+            }   
+            else
+            {
+                int cmd = this.popCommand();
+                this.executeCommand(cmd);
+            }
         }
-    },
-    
-    popCommand: function(cmd)
+        World* world = _world;
+        int widthMask = world._widthMask;
+        int heightMask = world._heightMask;
+
+        int newx = (this._posx + this._movx) & widthMask;
+        int newy = (this._posy + this._movy) & heightMask;
+        int warning = this._warning;
+        int incoming = world.get(newx, newy);
+
+        if ((warning < 2) 
+            && (incoming != 0) 
+            && (incoming != WORLD_FIREY) // explosions do not block
+            && (incoming != WORLD_FIRER) // explosions do not block
+            && (_invincibility == 0))
+        {
+            warning++;  
+            this._turbo = false;
+        }       
+        else
+        {
+            this._posx = newx;          
+            this._posy = newy;
+            warning = 0;
+        }
+        _warning = warning;
+    }
+
+    /* check one */
+    void checkDeath(bool turboCycle)
     {
-        var res = this._commandQueue[0];
-        this._commandIndex--;
-        var remaining = this._commandIndex;
-        
-        for (var i = 0; i < remaining; ++i) 
+        if (this._state != /* tron.STATE_ALIVE */ 1) 
         {
-            this._commandQueue[i] = this._commandQueue[i + 1];
+            return;
+        }       
+        if (turboCycle && !(this._turbo)) return;
+        if (this._warning > 0) return;
+
+        int t = this._world.get(this._posx, this._posy);
+
+        if (t != 0) 
+        {
+            this.take(t);
         }
-        //if (typeof res === "undefined") console.log("poped an undefined command");
-        return res;
-    },  
+    }
+
+    /* check two */
+    void checkDeath2(bool turboCycle)
+    {
+        if (this._state != /* tron.STATE_ALIVE */ 1) 
+        {
+            return;
+        }       
+        if (turboCycle && !(this._turbo)) return;       
+        if (this._warning > 0) return;
+        int t = this._world.get(this._posx, this._posy);
+
+        if (t != this._team) 
+        {
+            this.die();
+        }
+    }
+
+    void die()
+    {
+        if (this._invincibility > 0) return;
+
+        if (/* tron.PLAYERS_DO_EXPLODE */ 1) 
+        {
+            this._state = /* tron.STATE_EXPLODING1 */ 2;
+            // die sound
+            this._game._audioManager.playSampleLocation(/* tron.SAMPLE_DIE */ 2, 1.0, this._posx, this._posy);
+        }
+        else 
+        {
+            this._state = /* tron.STATE_DEAD */ 6;
+        }
+    }
+
+    void draw(bool turboCycle)
+    {
+        if (turboCycle && !(this._turbo)) return;
+        int i, j, invincibility, debris;
+        int x = this._posx;
+        int y = this._posy;
+        World* w = this._game.world;
+
+        switch (this._state)
+        {
+            case /* tron.STATE_ALIVE */ 1:              
+                invincibility = this._invincibility;
+                if ((invincibility > 0) && (invincibility < /* tron.INVINCIBILITY_DURATION */ 52))
+                {
+                    return;
+                }
+                w.set(x, y, this._team);
+                break;
+
+            case /* tron.STATE_EXPLODING1 */ 2:
+                for (j = -2; j <= 2; j++) 
+                {
+                    for (i = -2; i <= 2; i++) 
+                    {
+                        w.setSecure(x + i, y + j, /* tron.WORLD_FIREY */ -1);
+                    }
+                }
+                this._state = /* tron.STATE_EXPLODING2 */ 3;
+                break;
+
+            case /* tron.STATE_EXPLODING2 */ 3:
+                for (j = -2; j <= 2; j++) 
+                {
+                    for (i = -2; i <= 2; i++) 
+                    {
+                        w.setSecure(x + i, y + j, /* tron.WORLD_FIRER */ -2);
+                    }
+                }
+                this._state = /* tron.STATE_EXPLODING3 */ 4;
+                break;
+
+            case /* tron.STATE_EXPLODING3 */ 4:
+            case /* tron.STATE_EXPLODING4 */ 5:
+
+
+                for (j = -2; j <= 2; j++) 
+                {
+                    for (i = -2; i <= 2; i++) 
+                    {
+                        w.setSecure(x + i, y + j, /* tron.WORLD_EMPTY */ 0);
+                    }
+                }
+
+                switch((this._team - 1) & 7)
+                {
+                    case 0: debris = /* tron.WORLD_WALL_WHITE  */ -9; break;
+                    case 1: debris = /* tron.WORLD_WALL_RED    */ -11; break;
+                    case 2: debris = /* tron.WORLD_WALL_VIOLET */ -13; break;
+                    case 3: debris = /* tron.WORLD_WALL_PINK   */ -12; break;
+                    case 4: debris = /* tron.WORLD_WALL_GREEN  */ -6; break;
+                    case 5: debris = /* tron.WORLD_WALL_YELLOW */ -8; break;
+                    case 6: debris = /* tron.WORLD_WALL_CYAN   */ -15; break;
+                    case 7: default: debris = /* tron.WORLD_WALL_ORANGE */ -7;
+                }
+
+                for (j = -1; j <= 1; j++) 
+                {
+                    for (i = -1; i <= 1; i++) 
+                    {   
+                        w.setSecure(x + i, y + j, debris); 
+                    }                   
+                }
+                //w.setSecure(x, y, -10);       
+                this._state++;// = /* tron.STATE_DEAD */ 6;
+                break;
+
+            case /* tron.STATE_DEAD */ 6:
+                break;
+
+            default:
+                assert(0);
+        }
+    }
+
+    void take(int w)
+    {
+        if (this._invincibility > 0) 
+        {
+            return;
+        }
+        World* world = this._world;
+        switch (w)
+        {
+            case /* tron.WORLD_POWERUP_YELLOW */ -16: 
+
+                this._invincibility = /* tron.INVINCIBILITY_DURATION */ 52; 
+                this._game._audioManager.playSampleLocation(/* tron.SAMPLE_INVINCIBLE */ 5, 1.0, this._posx, this._posy);           
+                break;
+
+            case /* tron.WORLD_POWERUP_GREEN  */ -17: 
+
+                // get triple shoot definetively
+                this._game._audioManager.playSampleLocation(/* tron.SAMPLE_WEAPON_UPGRADE */ 4, 1.0, this._posx, this._posy);
+                this._tripleShoot++; 
+                break;                                                    
+            case /* tron.WORLD_POWERUP_PINK */ -18: 
+
+                // teleport somewhere               
+                int wx = world._width;
+                int wy = world._height;
+                int pdir = this._dir;
+
+                for (int i = 0; i < 100; ++i)
+                {
+                    int posx = randInt(0, wx);
+                    int posy = randInt(0, wy);
+                    //var pdir = this._dir; randInt(/* tron.DIR_UP */ 0, /* tron.DIR_RIGHT */ 3);
+                    if (world.isSafePos(posx, posy, pdir))
+                    {
+                        world.set(this._posx, this._posy, this._team); // eat powerup
+                        this._posx = posx;
+                        this._posy = posy;                      
+                        //this._movx = tron.directionX(pdir);
+                        //this._movy = tron.directionY(pdir);
+                        //this._turbo = false;
+                        //this._dir = pdir;
+                        break;
+                    }                       
+                } 
+                this._game._audioManager.playSample(/* tron.SAMPLE_TELEPORT */ 3, 1.0);
+                break;
+
+            case /* tron.WORLD_TRIANGLE_SW */ -20:
+                if (this._dir == /* tron.DIR_LEFT */ 2)
+                {
+                    this.pushCommand(/* tron.COMMAND_UP */ 0);
+                    this.pushCommand(/* tron.COMMAND_LEFT */ 2);
+
+                } 
+                else if (this._dir == /* tron.DIR_DOWN */ 1)
+                {
+                    this.pushCommand(/* tron.COMMAND_RIGHT */ 3);
+                    this.pushCommand(/* tron.COMMAND_DOWN */ 1);
+                } else this.die();
+                break;
+
+            case /* tron.WORLD_TRIANGLE_NW */ -21:  
+                if (this._dir == /* tron.DIR_LEFT */ 2)
+                {
+                    this.pushCommand(/* tron.COMMAND_DOWN */ 1);
+                    this.pushCommand(/* tron.COMMAND_LEFT */ 2);
+                } 
+                else if (this._dir == /* tron.DIR_UP */ 0)
+                {
+                    this.pushCommand(/* tron.COMMAND_RIGHT */ 3);
+                    this.pushCommand(/* tron.COMMAND_UP */ 0);
+                } else this.die();
+                break;  
+
+
+            case /* tron.WORLD_TRIANGLE_NE */ -22:
+                if (this._dir == /* tron.DIR_RIGHT */ 3)
+                {
+                    this.pushCommand(/* tron.COMMAND_DOWN */ 1);
+                    this.pushCommand(/* tron.COMMAND_RIGHT */ 3);
+                } 
+                else if (this._dir == /* tron.DIR_UP */ 0)
+                {
+                    this.pushCommand(/* tron.COMMAND_LEFT */ 2);
+                    this.pushCommand(/* tron.COMMAND_UP */ 0);
+                } else this.die();
+                break;  
+
+            case /* tron.WORLD_TRIANGLE_SE */ -23:  
+                if (this._dir == /* tron.DIR_RIGHT */ 3)
+                {
+                    this.pushCommand(/* tron.COMMAND_UP */ 0);
+                    this.pushCommand(/* tron.COMMAND_RIGHT */ 3);
+                } 
+                else if (this._dir == /* tron.DIR_DOWN */ 1)
+                {
+                    this.pushCommand(/* tron.COMMAND_LEFT */ 2);
+                    this.pushCommand(/* tron.COMMAND_DOWN */ 1);
+                } else this.die();
+                break;              
+
+            case /* tron.WORLD_POWERUP_ORANGE */ -19: break;
+            default: 
+                this.die();
+        }
+    }
+}
+
+
+int turnLeftDirection(int dir)
+{
+    switch (dir)
+    {
+        case /* tron.DIR_UP */ 0:
+            return /* tron.DIR_LEFT */ 2;               
+        case /*tron.DIR_DOWN */ 1:
+            return /* tron.DIR_RIGHT */ 3;              
+        case /* tron.DIR_LEFT */ 2:
+            return /*tron.DIR_DOWN */ 1;                
+        case /* tron.DIR_RIGHT */ 3:
+            return /* tron.DIR_UP */ 0;
+        default:
+            assert(false);
+    }
+}
+
+int turnRightDirection(int dir)
+{
+    switch (dir)
+    {
+        case /* tron.DIR_UP */ 0:
+            return /* tron.DIR_RIGHT */ 3;
+        case /*tron.DIR_DOWN */ 1:              
+            return /* tron.DIR_LEFT */ 2;
+        case /* tron.DIR_LEFT */ 2:
+            return /* tron.DIR_UP */ 0;
+        case /* tron.DIR_RIGHT */ 3:
+            return /*tron.DIR_DOWN */ 1;
+        default:
+            assert(false);
+    }
+}
+static double[10] TURN_PROBABILITY = [-1.0, 0.999, 0.9, 0.7, 0.4, 0.3, 0.2, 0.1, 0.05, 0.025];
+
+ /+
     
     intelligence: function()
     {
@@ -865,301 +1144,18 @@ tron.Player.prototype = {
                 this.pushCommand(/* tron.COMMAND_SHOOT */ 6);
             }
     },
-    
-    // one game tick
-    update: function(turboCycle)
-    {
-        if (this._state !== /* tron.STATE_ALIVE */ 1) 
-        {
-            return;
-        }
-        if (turboCycle && !(this._turbo)) return;
-        
-        this._waitforshoot = Math.max(this._waitforshoot - 1, 0);
-        
-        if (this._commandIndex > 0.5) 
-        {
-            if (turboCycle)
-            {
-                this._commandIndex = 0; // erase all commands
-            }   
-            else
-            {
-                var cmd = this.popCommand();
-                this.executeCommand(cmd);
-            }
-        }
-        var world = this._world;
-        var widthMask = world._widthMask;
-        var heightMask = world._heightMask;
-        
-        var newx = (this._posx + this._movx) & widthMask;
-        var newy = (this._posy + this._movy) & heightMask;
-        var warning = this._warning;
-        var incoming = world.get(newx, newy);
-        
-        if ((warning < 2) 
-           && (incoming !== 0) 
-           && (incoming !== /* tron.WORLD_FIREY */ -1) // explosions do not block
-           && (incoming !== /* tron.WORLD_FIRER */ -2) // explosions do not block
-           && (this._invincibility === 0))
-        {
-            warning++;  
-            this._turbo = false;
-        }       
-        else
-        {
-            this._posx = newx;          
-            this._posy = newy;
-            warning = 0;
-        }
-        this._warning = warning;
-        
-        //this._lifetime++;
+        +/
+   
+/+
+   
+   
     },
     
-    take: function(w)
-    {
-        if (this._invincibility > 0) 
-        {
-            return;
-        }
-        var world = this._world;
-        switch (w)
-        {
-            case /* tron.WORLD_POWERUP_YELLOW */ -16: 
-                
-                this._invincibility = /* tron.INVINCIBILITY_DURATION */ 52; 
-                this._game._audioManager.playSampleLocation(/* tron.SAMPLE_INVINCIBLE */ 5, 1.0, this._posx, this._posy);           
-                break;
-                
-            case /* tron.WORLD_POWERUP_GREEN  */ -17: 
-                
-                // get triple shoot definetively
-                this._game._audioManager.playSampleLocation(/* tron.SAMPLE_WEAPON_UPGRADE */ 4, 1.0, this._posx, this._posy);
-                this._tripleShoot++; 
-                break;                                                    
-            case /* tron.WORLD_POWERUP_PINK */ -18: 
-                
-                // teleport somewhere               
-                var randInt = tron.randInt;
-                var wx = world._width;
-                var wy = world._height;
-                var pdir = this._dir;
-                
-                for (var i = 0; i < 100; ++i)
-                {
-                    var posx = randInt(0, wx);
-                    var posy = randInt(0, wy);
-                    //var pdir = this._dir; randInt(/* tron.DIR_UP */ 0, /* tron.DIR_RIGHT */ 3);
-                    if (world.isSafePos(posx, posy, pdir))
-                    {
-                        world.set(this._posx, this._posy, this._team); // eat powerup
-                        this._posx = posx;
-                        this._posy = posy;                      
-                        //this._movx = tron.directionX(pdir);
-                        //this._movy = tron.directionY(pdir);
-                        //this._turbo = false;
-                        //this._dir = pdir;
-                        break;
-                    }                       
-                } 
-                this._game._audioManager.playSample(/* tron.SAMPLE_TELEPORT */ 3, 1.0);
-                break;
-        
-            case /* tron.WORLD_TRIANGLE_SW */ -20:
-                if (this._dir === /* tron.DIR_LEFT */ 2)
-                {
-                    this.pushCommand(/* tron.COMMAND_UP */ 0);
-                    this.pushCommand(/* tron.COMMAND_LEFT */ 2);
-                    
-                } 
-                else if (this._dir === /* tron.DIR_DOWN */ 1)
-                {
-                    this.pushCommand(/* tron.COMMAND_RIGHT */ 3);
-                    this.pushCommand(/* tron.COMMAND_DOWN */ 1);
-                } else this.die();
-                break;
-            
-            case /* tron.WORLD_TRIANGLE_NW */ -21:  
-                if (this._dir === /* tron.DIR_LEFT */ 2)
-                {
-                    this.pushCommand(/* tron.COMMAND_DOWN */ 1);
-                    this.pushCommand(/* tron.COMMAND_LEFT */ 2);
-                } 
-                else if (this._dir === /* tron.DIR_UP */ 0)
-                {
-                    this.pushCommand(/* tron.COMMAND_RIGHT */ 3);
-                    this.pushCommand(/* tron.COMMAND_UP */ 0);
-                } else this.die();
-                break;  
-                
-            
-            case /* tron.WORLD_TRIANGLE_NE */ -22:
-                if (this._dir === /* tron.DIR_RIGHT */ 3)
-                {
-                    this.pushCommand(/* tron.COMMAND_DOWN */ 1);
-                    this.pushCommand(/* tron.COMMAND_RIGHT */ 3);
-                } 
-                else if (this._dir === /* tron.DIR_UP */ 0)
-                {
-                    this.pushCommand(/* tron.COMMAND_LEFT */ 2);
-                    this.pushCommand(/* tron.COMMAND_UP */ 0);
-                } else this.die();
-                break;  
-            
-            case /* tron.WORLD_TRIANGLE_SE */ -23:  
-                if (this._dir === /* tron.DIR_RIGHT */ 3)
-                {
-                    this.pushCommand(/* tron.COMMAND_UP */ 0);
-                    this.pushCommand(/* tron.COMMAND_RIGHT */ 3);
-                } 
-                else if (this._dir === /* tron.DIR_DOWN */ 1)
-                {
-                    this.pushCommand(/* tron.COMMAND_LEFT */ 2);
-                    this.pushCommand(/* tron.COMMAND_DOWN */ 1);
-                } else this.die();
-                break;              
-                
-            case /* tron.WORLD_POWERUP_ORANGE */ -19: break;
-            default: 
-                this.die();
-        }
-    },
+  
     
-    /* check one */
-    checkDeath: function(turboCycle)
-    {
-        if (this._state !== /* tron.STATE_ALIVE */ 1) 
-        {
-            return;
-        }       
-        if (turboCycle && !(this._turbo)) return;
-        if (this._warning > 0) return;
-        
-        var t = this._world.get(this._posx, this._posy);
-        
-        if (t !== 0) 
-        {
-            this.take(t);
-        }
-    },
+   
     
-    /* check two */
-    checkDeath2: function(turboCycle)
-    {
-        if (this._state !== /* tron.STATE_ALIVE */ 1) 
-        {
-            return;
-        }       
-        if (turboCycle && !(this._turbo)) return;       
-        if (this._warning > 0) return;
-        var t = this._world.get(this._posx, this._posy);
-        
-        if (t !== this._team) 
-        {
-            this.die();//this.take(t);
-        }
-    },
-    
-    die: function()
-    {
-        if (this._invincibility > 0) return;
-        
-        if (/* tron.PLAYERS_DO_EXPLODE */ 1) 
-        {
-            this._state = /* tron.STATE_EXPLODING1 */ 2;
-            // die sound
-            this._game._audioManager.playSampleLocation(/* tron.SAMPLE_DIE */ 2, 1.0, this._posx, this._posy);
-        }
-        else 
-        {
-            this._state = /* tron.STATE_DEAD */ 6;
-        }
-    },
-    
-    draw: function(turboCycle)
-    {
-        if (turboCycle && !(this._turbo)) return;
-        var i, j, invincibility, debris;
-        var x = this._posx;
-        var y = this._posy;
-        var w = this._game._world;
-        
-        switch (this._state)
-        {
-            case /* tron.STATE_ALIVE */ 1:              
-                invincibility = this._invincibility;
-                if ((invincibility > 0) && (invincibility < /* tron.INVINCIBILITY_DURATION */ 52))
-                {
-                    return;
-                }
-                w.set(x, y, this._team);
-                break;
-                
-            case /* tron.STATE_EXPLODING1 */ 2:
-                for (j = -2; j <= 2; j++) 
-                {
-                    for (i = -2; i <= 2; i++) 
-                    {
-                        w.setSecure(x + i, y + j, /* tron.WORLD_FIREY */ -1);
-                    }
-                }
-                this._state = /* tron.STATE_EXPLODING2 */ 3;
-                break;
-                
-            case /* tron.STATE_EXPLODING2 */ 3:
-                for (j = -2; j <= 2; j++) 
-                {
-                    for (i = -2; i <= 2; i++) 
-                    {
-                        w.setSecure(x + i, y + j, /* tron.WORLD_FIRER */ -2);
-                    }
-                }
-                this._state = /* tron.STATE_EXPLODING3 */ 4;
-                break;
-                
-            case /* tron.STATE_EXPLODING3 */ 4:
-            case /* tron.STATE_EXPLODING4 */ 5:
-            
-                
-                for (j = -2; j <= 2; j++) 
-                {
-                    for (i = -2; i <= 2; i++) 
-                    {
-                        w.setSecure(x + i, y + j, /* tron.WORLD_EMPTY */ 0);
-                    }
-                }
-                
-                switch((this._team - 1) & 7)
-                {
-                    case 0: debris = /* tron.WORLD_WALL_WHITE  */ -9; break;
-                    case 1: debris = /* tron.WORLD_WALL_RED    */ -11; break;
-                    case 2: debris = /* tron.WORLD_WALL_VIOLET */ -13; break;
-                    case 3: debris = /* tron.WORLD_WALL_PINK   */ -12; break;
-                    case 4: debris = /* tron.WORLD_WALL_GREEN  */ -6; break;
-                    case 5: debris = /* tron.WORLD_WALL_YELLOW */ -8; break;
-                    case 6: debris = /* tron.WORLD_WALL_CYAN   */ -15; break;
-                    case 7: default: debris = /* tron.WORLD_WALL_ORANGE */ -7;
-                }
-                
-                for (j = -1; j <= 1; j++) 
-                {
-                    for (i = -1; i <= 1; i++) 
-                    {   
-                        w.setSecure(x + i, y + j, debris); 
-                    }                   
-                }
-                //w.setSecure(x, y, -10);       
-                this._state++;// = /* tron.STATE_DEAD */ 6;
-                break;
-                
-            case /* tron.STATE_DEAD */ 6:
-                break;
-        }
-        
-        
-    },
+   
     
     shootPixels : function()
     {

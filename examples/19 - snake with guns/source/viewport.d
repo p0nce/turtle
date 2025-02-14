@@ -25,7 +25,7 @@ class Viewport
     Vec!int _newArray;
     Vec!int _scratch;
 
-    this(Game game, Player player, int w, int h)
+    this(SnakeGame game, Player player, int w, int h)
     {
         _width = w;
         _height = h;
@@ -54,7 +54,7 @@ class Viewport
     }
 
 
-    Game _game;
+    SnakeGame _game;
     World* _world;
     Camera _camera;
     TextureManager _textures;

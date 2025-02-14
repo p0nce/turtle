@@ -173,7 +173,7 @@ tron.AudioManager = function()
 		this._nFocus = 0;		
 	}
 	
-	void addFocus(int x, int y, int dist)
+	void addFocus(int x, int y, double dist)
 	{
 		/*
 		var i = this._nFocus++;

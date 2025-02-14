@@ -13,7 +13,7 @@ import player;
 import viewport;
 
 
-class Game
+class SnakeGame
 {
     this(TextureManager textures, AudioManager audioManager, int size, int nHumans)
     {
@@ -122,6 +122,91 @@ class Game
         _viewports[0].render(fb);
     }
 
+    void update()
+    {
+        
+        int nHumans = _nHumans;
+       
+        /*for (int i = 0; i < MAX_PLAYERS; ++i)
+        {
+            players[i].intelligence();
+        }
+        */
+
+        //bulletPool.undraw();
+        //bulletPool.clean();
+        bulletPool.undrawAndClean();
+
+        // move all players
+        for (int i = 0; i < MAX_PLAYERS; ++i)
+        {
+            players[i].update(false);
+        }
+
+        bulletPool.update();
+    //       bulletPool.checkDeath();
+
+
+        // check collision, mark as dead		
+        for (int i = 0; i < MAX_PLAYERS; ++i)
+        {
+            players[i].checkDeath(false);
+        }
+
+        // draw players, advance explosion state		
+        for (int i = 0; i < MAX_PLAYERS; ++i)
+        {
+            players[i].draw(false);
+        }
+
+        bulletPool.update();
+        //     bulletPool.checkDeath();
+        bulletPool.draw();
+
+        // check collision, mark as dead again		
+        for (int i = 0; i < MAX_PLAYERS; ++i)
+        {
+            players[i].checkDeath2(false);
+        }
+
+
+        // TURBO        
+
+        // move all turbo players
+        for (int i = 0; i < nHumans; i++) 
+        {
+            players[i].update(true);
+        }
+
+        // check collision turbo players, mark as dead		
+        for (int i = 0; i < nHumans; i++) 
+        {
+            players[i].checkDeath(true);
+        }    
+
+        // draw players, advance explosion state		
+        for (int i = 0; i < nHumans; i++) 
+        {
+            players[i].draw(true);
+        }
+
+        // check collision, mark as dead again		
+        for (int i = 0; i < nHumans; i++) 
+        {
+            players[i].checkDeath2(true);
+        }
+
+        // END TURBO
+
+        audioManager.clearFocus();
+        for (int i = 0; i < nHumans; ++i)
+        {
+            Player player = players[i];
+            Viewport viewport = _viewports[i];
+            audioManager.addFocus(player._posx, player._posy, (viewport._width + viewport._height) * 0.53);
+        }
+    }
+
 private:
 
     int _endState;
@@ -142,98 +227,7 @@ private:
 
 tron.Game.prototype = {
 	
-	update: function()
-    {
-        // move all players
-        var players = this._players;
-        var bulletPool = this._bulletPool;
-        //var N = this._nPlayers;
-        var nHumans = this._nHumans;
-        var viewports = this._viewports;
-        var i;
-        
-        
-        for (i = 0; i < /*N*/ 8; ++i)
-        {
-            players[i].intelligence();
-        }
-        
-        
-        //bulletPool.undraw();
-        //bulletPool.clean();
-        bulletPool.undrawAndClean();
-        
-        // move all players
-        for (i = 0; i < /*N*/ 8; ++i)
-        {
-            players[i].update(false);
-        }
-        
-        bulletPool.update();
- //       bulletPool.checkDeath();
-        
-        
-        // check collision, mark as dead		
-        for (i = 0; i < /*N*/ 8; ++i)
-	    {
-	    	players[i].checkDeath(false);
-		}
-        
-        // draw players, advance explosion state		
-        for (i = 0; i < /*N*/ 8; ++i)
-        {
-           players[i].draw(false);
-        }
-        
-        bulletPool.update();
-   //     bulletPool.checkDeath();
-        bulletPool.draw();
-        
-        // check collision, mark as dead again		
-        for (i = 0; i < /*N*/ 8; ++i)
-        {
-            players[i].checkDeath2(false);
-        }
-        
-        
-        // TURBO        
-             
-        // move all turbo players
-        for (i = 0; i < nHumans; i++) 
-        {
-            players[i].update(true);
-        }
-        
-        // check collision turbo players, mark as dead		
-        for (i = 0; i < nHumans; i++) 
-        {
-            players[i].checkDeath(true);
-        }    
-        
-         // draw players, advance explosion state		
-        for (i = 0; i < nHumans; i++) 
-        {
-           players[i].draw(true);
-        }
-        
-        // check collision, mark as dead again		
-        for (i = 0; i < nHumans; i++) 
-        {
-            players[i].checkDeath2(true);
-        }
-        
-        // END TURBO
-        
-        // set the audible part of the game
-        var audioManager = this._audioManager;
-        audioManager.clearFocus();
-        for (i = 0; i < nHumans; ++i)
-        {
-	        var player = players[i];
-	        var viewport = viewports[i];
-        	audioManager.addFocus(player._posx, player._posy, (viewport._width + viewport._height) * 0.53);
-    	}
-    },
+	
     
     keydown: function(evt)
     {

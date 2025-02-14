@@ -120,10 +120,10 @@ enum int MAX_BULLETS = 128;
 class BulletPool
 {
     Bullet[] _bullets;
-    Game _game;
+    SnakeGame _game;
     int _count;
 
-    this(Game game)
+    this(SnakeGame game)
     {
         _game = game;
         _bullets.length = MAX_BULLETS;
@@ -210,7 +210,7 @@ struct Camera
     int _movx, _movy;
     int _wx, _wy;
 
-    this(Game game, int x, int y)
+    this(SnakeGame game, int x, int y)
     {
         this._x = x;
         this._y = y;
