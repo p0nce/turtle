@@ -65,6 +65,7 @@ class Game
     World* world() { return &_world; }
     AudioManager audioManager() { return _audioManager; }
     BulletPool bulletPool() { return _bulletPool; }
+    Player[] players() { return _players; }
     AudioManager _audioManager;
     TextureManager _textures;
 

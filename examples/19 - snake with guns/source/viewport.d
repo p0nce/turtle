@@ -69,6 +69,8 @@ class Viewport
         alias world = _world;
         alias player = _player;
 
+        size_t nPlayers =_game.players.length;
+
         int camx = camera._x;
         int camy = camera._y;
         alias playersimg = _playersTexture;
@@ -99,8 +101,6 @@ class Viewport
                 // tile to draw
                 int newOne = _newArray[i+j*tx];
 
-                newOne = WORLD_WALL_RED;               
-
                 int destX = marginX + i * 16 * scale;
                 int destY = marginY + j * 16 * scale;
 
@@ -108,12 +108,12 @@ class Viewport
                 { 	                                        
                     int y = (newOne & 0x70); // select row base on team
                     int x = (newOne & 15) * 16;
-                    drawImage(fb, playersimg, x , y, 16, 16, destX, destY, scale, bg);
+                    drawImage(fb, playersimg, x , y, 16, 16, destX, destY, scale);
                 }                    
                 else if (newOne < EMPTY_TILE) 
                 {                        
                     int x = ((-newOne - 2) /* & 15*/ ) * 16;
-                    drawImage(fb, othersimg, 0, x, 16, 16, destX, destY, scale, bg);
+                    drawImage(fb, othersimg, 0, x, 16, 16, destX, destY, scale);
                 }
                 else
                 {
@@ -122,17 +122,15 @@ class Viewport
             }
         }
 
-    /+
-        // draw players eyes
-        for (i = 0; i < nPlayers; ++i)
+        for (int i = 0; i < nPlayers; ++i)
         {
 			/* draw eyes of players that are visible */
-			var tplayer = players[i];
-            if (tplayer._state === /* tron.STATE_ALIVE */ 1) 
+			Player tplayer = _game.players[i];
+            if (tplayer._state == STATE_ALIVE) 
             {
-                x = (tplayer._posx - camx) & ww;
-                y = (tplayer._posy - camy) & wh;
-                j = 16 * tplayer._dir;
+                int x = (tplayer._posx - camx) & world._widthMask;
+                int y = (tplayer._posy - camy) & world._heightMask;
+                int j = 16 * tplayer._dir;
                 if (tplayer._invincibility > 0) 
                 {
 	             	continue;
@@ -148,12 +146,10 @@ class Viewport
 
                 if ((x >= 0) && (x < tx) && (y >= 0) && (y < ty))
                 {
-                    context.drawImage(eyesimg, 0, j | 0, 16, 16, x * 16, y * 16, 16, 16);
+                    drawImage(fb, eyesimg, 0, j, 16, 16, x * 16, y * 16, scale);
                 }			
             }			
         }
-    +/
-
     }
 }
 
@@ -162,24 +158,31 @@ void drawImage(ImageRef!RGBA fb, Image* image,
                int srcX, int srcY, 
                int w, int h, 
                int destX, int destY, 
-               int scale,
-               RGBA bg)
+               int scale)
 {
     assert(fb.w >= destX + w * scale);
     assert(fb.h >= destY + h * scale);    
     
     for (int y = 0; y < h; ++y)
     {
-        
         RGBA[] scan = cast(RGBA[]) image.scanline(srcY + y);
+
         for (int x = 0; x < w; ++x)
         {
             RGBA fg = scan[srcX + x];
-            RGBA col = blendColor(bg, fg, fg.a);
+            
             for (int sy = 0; sy < scale; ++sy)
             {
                 RGBA[] dest = fb.scanline(destY + y * scale + sy);
-                dest[destX + x*scale .. destX + x*scale+scale-1] = col;
+
+                // PERF: except for the eyes, we already know value of the bg
+                for (int sx = 0; sx < scale; ++sx)
+                {
+                    int xx = destX + x * scale + sx;
+                    RGBA bg = dest[xx];
+                    RGBA col = blendColor(fg, bg, fg.a);
+                    dest[xx] = col;
+                }
             }
         }
     }
