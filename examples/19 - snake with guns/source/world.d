@@ -74,7 +74,7 @@ struct World
         int i = 0, j = 0;
         for (i = 0; i < len; ++i)
     	{
-    		this._array[i] = 0;
+    		this._array[i] = WORLD_EMPTY;
         }    
         
         int wallWidth = 1;
@@ -100,8 +100,8 @@ struct World
         {
             for (i = 0; i < w; ++i) 
             {
-                this.set(i, j, /* tron.WORLD_WALL_BLUE */ -5);
-                this.set(i, h - 1 - j, /* tron.WORLD_WALL_BLUE */ -5);
+                set(i, j, WORLD_WALL_BLUE);
+                set(i, h - 1 - j, WORLD_WALL_BLUE);
             }           
         }
         
@@ -109,8 +109,8 @@ struct World
         {
             for (j = 0; j < h; ++j) 
             {
-                this.set(i, j, /* tron.WORLD_WALL_BLUE */ -5);
-                this.set(w - 1 - i, j, /* tron.WORLD_WALL_BLUE */ -5);
+                set(i, j, WORLD_WALL_BLUE);
+                set(w - 1 - i, j, WORLD_WALL_BLUE);
             }        
         }        
     }
@@ -178,7 +178,7 @@ struct World
     // results an array of width x height elements
     // scratch a scratch array of (width + 2) x (height + 2) elements
     void getTiles(int x, int y, int width, int height, 
-        int[] results, int[] scratch)
+        ref Vec!int results, ref Vec!int scratch)
     {
         assert(results.length == width * height);
         assert(scratch.length == (width + 2) * (height + 2));

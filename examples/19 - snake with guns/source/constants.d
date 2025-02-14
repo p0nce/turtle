@@ -32,12 +32,7 @@ enum int
 enum int 
     TEXTURE_PLAYERS = 0,
     TEXTURE_OTHERTILES = 1,
-    TEXTURE_EYES = 2,
-    TEXTURE_BAR = 3,
-    TEXTURE_GFM = 4,
-    TEXTURE_MARS = 5,
-    TEXTURE_HELP = 6,
-    TEXTURE_LETTERS = 7;
+    TEXTURE_EYES = 2;
 
 enum int
     GAME_STATE_LOADING = 0,

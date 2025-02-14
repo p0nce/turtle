@@ -1,5 +1,6 @@
 module game;
 
+import turtle;
 import dplug.core.vec;
 import constants;
 import audiomanager;
@@ -10,6 +11,7 @@ import texture;
 import bullet;
 import player;
 import viewport;
+
 
 class Game
 {
@@ -51,7 +53,7 @@ class Game
         _viewports.length = MAX_PLAYERS;
         for (int i = 0; i < MAX_PLAYERS; ++i) 
         {
-            this._viewports[i] = new Viewport(this, this._players[i], _world.width, _world.height);
+            this._viewports[i] = new Viewport(this, this._players[i], 15, 15);
         }
     
         audioManager.setWorldSize(_world._width, _world._height);
@@ -63,6 +65,61 @@ class Game
     World* world() { return &_world; }
     AudioManager audioManager() { return _audioManager; }
     BulletPool bulletPool() { return _bulletPool; }
+    AudioManager _audioManager;
+    TextureManager _textures;
+
+    void render(ImageRef!RGBA fb)
+    {
+        renderViewports(fb);
+
+        if (this._endState == END_NOT_YET)
+        {
+            // check terminationed
+            //var nPlayers = this._nPlayers;
+            int nHumans = this._nHumans;
+            int nPlayersAlive = MAX_PLAYERS;  
+            int nHumansAlive = nHumans;  
+
+            for (int i = 0; i < MAX_PLAYERS; ++i)
+            {
+                if (_players[i]._state == STATE_DEAD)
+                {
+                    nPlayersAlive--;
+                    if (i < nHumans) 
+                    {
+                        nHumansAlive--;
+                    }
+                }
+            } 
+            int nAIAlive = nPlayersAlive - nHumansAlive;
+            if (nPlayersAlive == 0)
+            {
+                _endState = END_EVERYONE_IS_DEAD;
+
+            } else {
+
+                if ((nAIAlive == 0) && (nHumansAlive == 1))
+                {
+                    _endState = END_PLAYER_WIN;
+                }
+
+                if ((nHumansAlive == 0) && (nAIAlive > 0))
+                {
+                    _endState = END_IA_WIN;
+                }
+            }
+        } 
+        else
+        {
+            this._endElapsed++;
+        }
+    }
+
+    void renderViewports(ImageRef!RGBA fb)
+    {
+        _viewports[0].moveCamera();
+        _viewports[0].render(fb);
+    }
 
 private:
 
@@ -70,10 +127,8 @@ private:
     int _endElapsed;
     int _nHumans;
 
-    World _world;
-    AudioManager _audioManager;
+    World _world;    
     BulletPool _bulletPool;
-    TextureManager _textures;
 
     Player[] _players;
     Viewport[] _viewports;
@@ -195,122 +250,4 @@ tron.Game.prototype = {
 	            case 96: players[0].pushCommand(/* tron.COMMAND_SHOOT */ 6); break; // numpad 0
 	        }
         }
-        if (nHumans >= 2)
-        {
-			switch (evt.keyCode)
-			{
-				case 90: 
-				case 87: players[1].pushCommand(/* tron.COMMAND_UP */ 0); break;
-			    case 83: players[1].pushCommand(/* tron.COMMAND_DOWN */ 1); break;
-			    case 81: 
-			    case 65: players[1].pushCommand(/* tron.COMMAND_LEFT */ 2); break;
-			    case 68: players[1].pushCommand(/* tron.COMMAND_RIGHT */ 3); break;
-			    case 69: players[1].pushCommand(/* tron.COMMAND_SHOOT */ 6); break; // E
-			}   
-        }
-        if (nHumans >= 3)
-        {
-			switch (evt.keyCode)
-			{
-				case 73: players[2].pushCommand(/* tron.COMMAND_UP */ 0); break;
-			    case 75: players[2].pushCommand(/* tron.COMMAND_DOWN */ 1); break;
-			    case 74: players[2].pushCommand(/* tron.COMMAND_LEFT */ 2); break;
-			    case 76: players[2].pushCommand(/* tron.COMMAND_RIGHT */ 3); break;
-			    case 79: players[2].pushCommand(/* tron.COMMAND_SHOOT */ 6); break;
-			}   
-        }
-        if (nHumans >= 4)
-        {
-			switch (evt.keyCode)
-			{
-				case 36: players[3].pushCommand(/* tron.COMMAND_UP */ 0); break; // home
-			    case 35: players[3].pushCommand(/* tron.COMMAND_DOWN */ 1); break; // end
-			    case 46: players[3].pushCommand(/* tron.COMMAND_LEFT */ 2); break; // del
-			    case 34: players[3].pushCommand(/* tron.COMMAND_RIGHT */ 3); break; // page down
-			    case 57:
-			    case 33: players[3].pushCommand(/* tron.COMMAND_SHOOT */ 6); break; // page up
-			}   
-        }
-    },
-    
-    renderViewports: function()
-    {
-	    var viewports = this._viewports;
-	    
-	    for (var i = 0; i < 8; ++i)        
-        {
-            var v = viewports[i];
-            if (v._isValid) 
-            {
-                v.moveCamera();
-                v.render();
-            }
-        }
-    },
-    
-    render: function()
-    {
-        this.renderViewports();
-        
-        if (this._endState === /* tron.END_NOT_YET */ 0)
-        {
-	         // check terminationed
-	    	//var nPlayers = this._nPlayers;
-		    var nHumans = this._nHumans;
-	        var nPlayersAlive = /* nPlayers */ 8;  
-	        var nHumansAlive = nHumans;  
-	        var players = this._players;
-	         
-	        for (i = 0; i < /*nPlayers*/8; ++i)
-	        {
-	            if (players[i]._state === /* tron.STATE_DEAD */ 6)
-	            {
-		            nPlayersAlive--;
-		            if (i < nHumans) 
-		            {
-			            nHumansAlive--;
-		            }
-	            }
-	        } 
-	        var nAIAlive = nPlayersAlive - nHumansAlive;
-	        if (nPlayersAlive === 0)
-	        {
-		        this._endState = /* tron.END_EVERYONE_IS_DEAD */ 1;
-		        
-	        } else {
-		        
-		        if ((nAIAlive === 0) && (nHumansAlive === 1))
-		        {
-			        this._endState = /* tron.END_PLAYER_WIN */ 3;
-		        }
-		        
-		        if ((nHumansAlive === 0) && (nAIAlive > 0))
-		        {
-			        this._endState = /* tron.END_IA_WIN */ 2;
-		        }
-	        }
-        } 
-        else
-        {
-	        this._endElapsed++;
-        }
-        
-        
-    },
-    
-    resize: function(mw, mh)
-    {
-	    var viewports = this._viewports;
-        for (var i = 0; i < 8; ++i)        
-        {
-            var v = viewports[i];
-            if (v._isValid) 
-            {
-                v.resize();
-            }
-        }
-    },
-    
-    
-};
 +/
