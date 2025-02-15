@@ -37,27 +37,26 @@ class SnakeGame
 
         _players.length = MAX_PLAYERS;
         _bulletPool = new BulletPool(this);
-    
+
         Vec!SafePos safePos;
         // choose safe locations (assume existing)
         _world.getSafePositions(MAX_PLAYERS, safePos);
-    
+
         for (int i = 0; i < MAX_PLAYERS; i++) 
         {
             bool isHuman = i == 0; // one player support only
             int team = i + 1;
             _players[i] = new Player(this, isHuman, team, safePos[i].x, safePos[i].y, safePos[i].dir);
         }
-    
+
          // create viewports
         _viewports.length = MAX_PLAYERS;
-        for (int i = 0; i < MAX_PLAYERS; ++i) 
+        for (int i = 0; i < MAX_PLAYERS; ++i)
         {
             this._viewports[i] = new Viewport(this, this._players[i], 30, 22);
         }
-    
+
         audioManager.setWorldSize(_world._width, _world._height);
-    
         _endState = END_NOT_YET;
         _endElapsed = 0;
     }
@@ -75,18 +74,16 @@ class SnakeGame
 
         if (this._endState == END_NOT_YET)
         {
-            // check terminationed
-            //var nPlayers = this._nPlayers;
             int nHumans = this._nHumans;
-            int nPlayersAlive = MAX_PLAYERS;  
-            int nHumansAlive = nHumans;  
+            int nPlayersAlive = MAX_PLAYERS;
+            int nHumansAlive = nHumans;
 
             for (int i = 0; i < MAX_PLAYERS; ++i)
             {
                 if (_players[i]._state == STATE_DEAD)
                 {
                     nPlayersAlive--;
-                    if (i < nHumans) 
+                    if (i < nHumans)
                     {
                         nHumansAlive--;
                     }
@@ -109,10 +106,10 @@ class SnakeGame
                     _endState = END_IA_WIN;
                 }
             }
-        } 
+        }
         else
         {
-            this._endElapsed++;
+            _endElapsed++;
         }
     }
 
@@ -133,14 +130,12 @@ class SnakeGame
 
     void update()
     {
-        
         int nHumans = _nHumans;
        
         for (int i = 0; i < MAX_PLAYERS; ++i)
         {
             players[i].intelligence();
         }
-
         bulletPool.undrawAndClean();
 
         // move all players
@@ -148,16 +143,15 @@ class SnakeGame
         {
             players[i].update(false);
         }
-
         bulletPool.update();
 
-        // check collision, mark as dead		
+        // check collision, mark as dead
         for (int i = 0; i < MAX_PLAYERS; ++i)
         {
             players[i].checkDeath(false);
         }
 
-        // draw players, advance explosion state		
+        // draw players, advance explosion state
         for (int i = 0; i < MAX_PLAYERS; ++i)
         {
             players[i].draw(false);
@@ -166,35 +160,35 @@ class SnakeGame
         bulletPool.update();
         bulletPool.draw();
 
-        // check collision, mark as dead again		
+        // check collision, mark as dead again
         for (int i = 0; i < MAX_PLAYERS; ++i)
         {
             players[i].checkDeath2(false);
         }
 
 
-        // TURBO        
+        // TURBO
 
         // move all turbo players
-        for (int i = 0; i < nHumans; i++) 
+        for (int i = 0; i < nHumans; i++)
         {
             players[i].update(true);
         }
 
-        // check collision turbo players, mark as dead		
+        // check collision turbo players, mark as dead
         for (int i = 0; i < nHumans; i++) 
         {
             players[i].checkDeath(true);
-        }    
+        }
 
-        // draw players, advance explosion state		
+        // draw players, advance explosion state
         for (int i = 0; i < nHumans; i++) 
         {
             players[i].draw(true);
         }
 
-        // check collision, mark as dead again		
-        for (int i = 0; i < nHumans; i++) 
+        // check collision, mark as dead again
+        for (int i = 0; i < nHumans; i++)
         {
             players[i].checkDeath2(true);
         }
@@ -216,36 +210,9 @@ private:
     int _endElapsed;
     int _nHumans;
 
-    World _world;    
+    World _world;
     BulletPool _bulletPool;
 
     Player[] _players;
     Viewport[] _viewports;
 }
-
-/+
-    
-    
-};
-
-tron.Game.prototype = {
-	
-	
-    
-    keydown: function(evt)
-    {
-	    var players = this._players;
-	    var nHumans = this._nHumans;
-	    if (nHumans >= 1)
-	    {
-		    switch (evt.keyCode)
-	        {
-	            case 38: players[0].pushCommand(/* tron.COMMAND_UP */ 0); break;
-	            case 40: players[0].pushCommand(/* tron.COMMAND_DOWN */ 1); break;
-	            case 37: players[0].pushCommand(/* tron.COMMAND_LEFT */ 2); break;
-	            case 39: players[0].pushCommand(/* tron.COMMAND_RIGHT */ 3); break;
-	            case 48:                                                            // numpad 0 Opera
-	            case 96: players[0].pushCommand(/* tron.COMMAND_SHOOT */ 6); break; // numpad 0
-	        }
-        }
-+/

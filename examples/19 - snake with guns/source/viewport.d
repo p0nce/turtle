@@ -104,19 +104,19 @@ class Viewport
                 int destY = marginY + j * 16 * scale;
 
                 if (newOne > EMPTY_TILE) 
-                { 	                                        
+                {
                     int y = (newOne & 0x70); // select row base on team
                     int x = (newOne & 15) * 16;
                     drawImage(fb, playersimg, x , y, 16, 16, destX, destY, scale, bg);
-                }                    
+                }
                 else if (newOne < EMPTY_TILE) 
-                {                        
+                {
                     int x = ((-newOne - 2) /* & 15*/ ) * 16;
                     drawImage(fb, othersimg, 0, x, 16, 16, destX, destY, scale, bg);
                 }
                 else
                 {
-                    // empty tile                    
+                    // empty tile
                 }
             }
         }
@@ -125,29 +125,32 @@ class Viewport
         {
 			/* draw eyes of players that are visible */
 			Player tplayer = _game.players[i];
-            if (tplayer._state == STATE_ALIVE) 
+            if (tplayer._state == STATE_ALIVE)
             {
                 int x = (tplayer._posx - camx) & world._widthMask;
                 int y = (tplayer._posy - camy) & world._heightMask;
                 int j = 16 * tplayer._dir;
-                if (tplayer._invincibility > 0) 
+                if (tplayer._invincibility > 0)
                 {
-	             	continue;
+	                continue;
                 }
-                else if (tplayer._warning > 0) 
+                else if (tplayer._warning > 0)
                 {
 	                j += 64;
                 }
                 else if (tplayer._turbo)
                 {
-	             	j += 128;   
-                }             
+	                j += 128;
+                }
+
+                int destX = marginX + x * 16 * scale;
+                int destY = marginY + y * 16 * scale;
 
                 if ((x >= 0) && (x < tx) && (y >= 0) && (y < ty))
                 {
-                    drawImage(fb, eyesimg, 0, j, 16, 16,  marginX + x * 16 * scale,  marginY + y * 16 * scale, scale);
-                }			
-            }			
+                    drawImage(fb, eyesimg, 0, j, 16, 16, destX, destY, scale);
+                }
+            }
         }
     }
 }
@@ -160,8 +163,8 @@ void drawImage(ImageRef!RGBA fb, Image* image,
                int scale)
 {
     assert(fb.w >= destX + w * scale);
-    assert(fb.h >= destY + h * scale);    
-    
+    assert(fb.h >= destY + h * scale);
+
     for (int y = 0; y < h; ++y)
     {
         RGBA[] scan = cast(RGBA[]) image.scanline(srcY + y);
@@ -170,7 +173,7 @@ void drawImage(ImageRef!RGBA fb, Image* image,
         {
             RGBA fg = scan[srcX + x];
             if (fg.a == 0) continue;
-            
+
             for (int sy = 0; sy < scale; ++sy)
             {
                 RGBA[] dest = fb.scanline(destY + y * scale + sy);
@@ -197,8 +200,8 @@ void drawImage(ImageRef!RGBA fb, Image* image,
                RGBA bg)
 {
     assert(fb.w >= destX + w * scale);
-    assert(fb.h >= destY + h * scale);    
-    
+    assert(fb.h >= destY + h * scale);
+
     for (int y = 0; y < h; ++y)
     {
         RGBA[] scan = cast(RGBA[]) image.scanline(srcY + y);
@@ -208,11 +211,10 @@ void drawImage(ImageRef!RGBA fb, Image* image,
             RGBA fg = scan[srcX + x];
             if (fg.a == 0) continue;
             RGBA col = blendColor(fg, bg, fg.a);
-            
+
             for (int sy = 0; sy < scale; ++sy)
             {
                 RGBA[] dest = fb.scanline(destY + y * scale + sy);
-
                 int xx = destX + x * scale;
                 dest[xx..xx+scale] = col;
             }
