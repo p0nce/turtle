@@ -14,7 +14,8 @@ class SnakeExample : TurtleGame
 
     override void load()
     {
-        setBackgroundColor(color("#EAF5FF"));
+        // Do not erase background on new frame
+        setBackgroundColor(color("transparent"));
 
         TM_Options opt;
         console.size(30, 22);
@@ -32,7 +33,7 @@ class SnakeExample : TurtleGame
         needRender = true;
     }
 
-    enum double FPS = 20;
+    enum double FPS = 4;
     enum double TIME_PER_FRAME = 1.0 / FPS;
     double time;
     bool needRender;
@@ -44,7 +45,8 @@ class SnakeExample : TurtleGame
 
         // original game work with fixed physics
         if (dt > 1)
-            dt = 1;        
+            dt = 1;
+
         time += dt;
         while(time > TIME_PER_FRAME)
         {
@@ -57,8 +59,13 @@ class SnakeExample : TurtleGame
     override void draw()
     {
         ImageRef!RGBA fb = framebuffer();
-        if (needRender) _game.render(fb);
-        needRender = false;
+        if (needRender)
+        {
+            RGBA bg = RGBA(234, 245, 255, 255);
+            framebuffer.fillAll(bg);
+            _game.render(framebuffer);
+            needRender = false;
+        } 
     }
 
     void newGame()

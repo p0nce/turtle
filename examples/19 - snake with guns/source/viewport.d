@@ -45,14 +45,13 @@ class Viewport
         _array.resize(mH * mW);
         _newArray.resize(mH * mW);
         _scratch.resize((mH + 2) * (mW + 2));
-         moveCamera();
+        moveCamera();
     }
 
     void moveCamera()
     {
         _camera.follow(_player, -(_width >> 1), -(_height >> 1));
     }
-
 
     SnakeGame _game;
     World* _world;
@@ -108,12 +107,12 @@ class Viewport
                 { 	                                        
                     int y = (newOne & 0x70); // select row base on team
                     int x = (newOne & 15) * 16;
-                    drawImage(fb, playersimg, x , y, 16, 16, destX, destY, scale);
+                    drawImage(fb, playersimg, x , y, 16, 16, destX, destY, scale, bg);
                 }                    
                 else if (newOne < EMPTY_TILE) 
                 {                        
                     int x = ((-newOne - 2) /* & 15*/ ) * 16;
-                    drawImage(fb, othersimg, 0, x, 16, 16, destX, destY, scale);
+                    drawImage(fb, othersimg, 0, x, 16, 16, destX, destY, scale, bg);
                 }
                 else
                 {
@@ -146,7 +145,7 @@ class Viewport
 
                 if ((x >= 0) && (x < tx) && (y >= 0) && (y < ty))
                 {
-                    drawImage(fb, eyesimg, 0, j, 16, 16, x * 16, y * 16, scale);
+                    drawImage(fb, eyesimg, 0, j, 16, 16,  marginX + x * 16 * scale,  marginY + y * 16 * scale, scale);
                 }			
             }			
         }
@@ -170,6 +169,7 @@ void drawImage(ImageRef!RGBA fb, Image* image,
         for (int x = 0; x < w; ++x)
         {
             RGBA fg = scan[srcX + x];
+            if (fg.a == 0) continue;
             
             for (int sy = 0; sy < scale; ++sy)
             {
@@ -183,6 +183,38 @@ void drawImage(ImageRef!RGBA fb, Image* image,
                     RGBA col = blendColor(fg, bg, fg.a);
                     dest[xx] = col;
                 }
+            }
+        }
+    }
+}
+
+// special case when background is known
+void drawImage(ImageRef!RGBA fb, Image* image, 
+               int srcX, int srcY, 
+               int w, int h, 
+               int destX, int destY, 
+               int scale,
+               RGBA bg)
+{
+    assert(fb.w >= destX + w * scale);
+    assert(fb.h >= destY + h * scale);    
+    
+    for (int y = 0; y < h; ++y)
+    {
+        RGBA[] scan = cast(RGBA[]) image.scanline(srcY + y);
+
+        for (int x = 0; x < w; ++x)
+        {
+            RGBA fg = scan[srcX + x];
+            if (fg.a == 0) continue;
+            RGBA col = blendColor(fg, bg, fg.a);
+            
+            for (int sy = 0; sy < scale; ++sy)
+            {
+                RGBA[] dest = fb.scanline(destY + y * scale + sy);
+
+                int xx = destX + x * scale;
+                dest[xx..xx+scale] = col;
             }
         }
     }

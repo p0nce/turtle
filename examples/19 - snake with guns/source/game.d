@@ -53,7 +53,7 @@ class SnakeGame
         _viewports.length = MAX_PLAYERS;
         for (int i = 0; i < MAX_PLAYERS; ++i) 
         {
-            this._viewports[i] = new Viewport(this, this._players[i], 15, 15);
+            this._viewports[i] = new Viewport(this, this._players[i], 30, 22);
         }
     
         audioManager.setWorldSize(_world._width, _world._height);
@@ -136,14 +136,11 @@ class SnakeGame
         
         int nHumans = _nHumans;
        
-        /*for (int i = 0; i < MAX_PLAYERS; ++i)
+        for (int i = 0; i < MAX_PLAYERS; ++i)
         {
             players[i].intelligence();
         }
-        */
 
-        //bulletPool.undraw();
-        //bulletPool.clean();
         bulletPool.undrawAndClean();
 
         // move all players
@@ -153,8 +150,6 @@ class SnakeGame
         }
 
         bulletPool.update();
-    //       bulletPool.checkDeath();
-
 
         // check collision, mark as dead		
         for (int i = 0; i < MAX_PLAYERS; ++i)
@@ -169,7 +164,6 @@ class SnakeGame
         }
 
         bulletPool.update();
-        //     bulletPool.checkDeath();
         bulletPool.draw();
 
         // check collision, mark as dead again		
