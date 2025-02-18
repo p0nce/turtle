@@ -212,6 +212,10 @@ class Graphics : IGraphics, IRenderer
         {
             fillWithClearColor(clearColor);
         }
+        else if (clearColor.a == 0)
+        {
+            // do nothing
+        }
         else
         {
             // blend color with previous to make a cheap motion blur

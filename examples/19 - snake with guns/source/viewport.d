@@ -107,12 +107,12 @@ class Viewport
                 {
                     int y = (newOne & 0x70); // select row base on team
                     int x = (newOne & 15) * 16;
-                    drawImage(fb, playersimg, x , y, 16, 16, destX, destY, scale, bg);
+                    drawImageCopy(fb, playersimg, x , y, 16, 16, destX, destY, scale);
                 }
                 else if (newOne < EMPTY_TILE) 
                 {
                     int x = ((-newOne - 2) /* & 15*/ ) * 16;
-                    drawImage(fb, othersimg, 0, x, 16, 16, destX, destY, scale, bg);
+                    drawImageCopy(fb, othersimg, 0, x, 16, 16, destX, destY, scale);
                 }
                 else
                 {
@@ -191,32 +191,30 @@ void drawImage(ImageRef!RGBA fb, Image* image,
     }
 }
 
-// special case when background is known
-void drawImage(ImageRef!RGBA fb, Image* image, 
+// No blend version
+void drawImageCopy(ImageRef!RGBA fb, Image* image, 
                int srcX, int srcY, 
                int w, int h, 
                int destX, int destY, 
-               int scale,
-               RGBA bg)
+               int scale)
 {
     assert(fb.w >= destX + w * scale);
     assert(fb.h >= destY + h * scale);
+    static assert(int.sizeof == RGBA.sizeof);
 
     for (int y = 0; y < h; ++y)
     {
-        RGBA[] scan = cast(RGBA[]) image.scanline(srcY + y);
-
+        int[] scan = cast(int[]) image.scanline(srcY + y);
         for (int x = 0; x < w; ++x)
         {
-            RGBA fg = scan[srcX + x];
-            if (fg.a == 0) continue;
-            RGBA col = blendColor(fg, bg, fg.a);
+            int fg = scan.ptr[srcX + x];
+            if ((fg >>> 24) == 0) continue;
 
             for (int sy = 0; sy < scale; ++sy)
             {
-                RGBA[] dest = fb.scanline(destY + y * scale + sy);
+                int* dest = cast(int*)(fb.scanline(destY + y * scale + sy).ptr);
                 int xx = destX + x * scale;
-                dest[xx..xx+scale] = col;
+                dest[xx..xx+scale] = fg;
             }
         }
     }

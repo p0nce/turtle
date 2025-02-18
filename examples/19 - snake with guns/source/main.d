@@ -33,7 +33,7 @@ class SnakeExample : TurtleGame
         needRender = true;
     }
 
-    enum double FPS = 4;
+    enum double FPS = 7;
     enum double TIME_PER_FRAME = 1.0 / FPS;
     double time;
     bool needRender;
