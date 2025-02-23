@@ -125,6 +125,7 @@ class Viewport
                 else
                 {
                     // empty tile
+                    drawEmptyTile(fb, destX, destY, scale, bg);
                 }
             }
         }
@@ -196,6 +197,19 @@ void drawImage(ImageRef!RGBA fb, Image* image,
                 }
             }
         }
+    }
+}
+
+void drawEmptyTile(ImageRef!RGBA fb, int destX, int destY, int scale, RGBA bg)
+{
+    int w = TILE_WIDTH_IN_PIXELS * scale;
+    int h = TILE_HEIGHT_IN_PIXELS * scale;
+    int bgi = *cast(int*)&bg;
+    for (int y = destY; y < destY + h; ++y)
+    {   int* dest = cast(int*)(fb.scanline(y).ptr);
+
+        for (int x = destX; x < destX + w; ++x)
+            dest[x] = bgi;
     }
 }
 

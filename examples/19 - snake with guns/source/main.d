@@ -31,12 +31,19 @@ class SnakeExample : TurtleGame
         newGame();
         time = 0;
         needRender = true;
+        needRenderBackground = true;
     }
 
     enum double FPS = 7;
     enum double TIME_PER_FRAME = 1.0 / FPS;
     double time;
     bool needRender;
+    bool needRenderBackground;
+
+    override void resized(float width, float height)
+    {
+        needRenderBackground = true;
+    }
 
     override void update(double dt)
     {
@@ -59,10 +66,16 @@ class SnakeExample : TurtleGame
     override void draw()
     {
         ImageRef!RGBA fb = framebuffer();
+
+        if (needRenderBackground)
+        {
+            RGBA bg = RGBA(255, 255, 255, 255);
+            framebuffer.fillAll(bg);
+            needRenderBackground = false;
+        }
+
         if (needRender)
         {
-            RGBA bg = RGBA(255, 255, 255, 255);//RGBA(234, 245, 255, 255);
-            framebuffer.fillAll(bg);
             _game.render(framebuffer);
             needRender = false;
         } 
