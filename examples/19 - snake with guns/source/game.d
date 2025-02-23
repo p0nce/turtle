@@ -53,7 +53,8 @@ class SnakeGame
         _viewports.length = MAX_PLAYERS;
         for (int i = 0; i < MAX_PLAYERS; ++i)
         {
-            this._viewports[i] = new Viewport(this, this._players[i], 30, 22);
+            //this._viewports[i] = new Viewport(this, this._players[i], 30, 22);
+            this._viewports[i] = new Viewport(this, this._players[i], 25, 19);
         }
 
         audioManager.setWorldSize(_world._width, _world._height);

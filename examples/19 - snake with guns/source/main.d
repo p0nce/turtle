@@ -34,7 +34,7 @@ class SnakeExample : TurtleGame
         needRenderBackground = true;
     }
 
-    enum double FPS = 7;
+    enum double FPS = 12;
     enum double TIME_PER_FRAME = 1.0 / FPS;
     double time;
     bool needRender;
@@ -83,7 +83,7 @@ class SnakeExample : TurtleGame
 
     void newGame()
     {
-        _game = new SnakeGame(_textures, _audio, 6, 1);
+        _game = new SnakeGame(_textures, _audio, 7, 1);
     }
 
     override void keyPressed(KeyConstant key)
