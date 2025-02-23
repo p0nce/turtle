@@ -73,7 +73,14 @@ struct Bullet
         
         if (state == BULLET_STATE_ALIVE)
         {
-            w.set(x, y, WORLD_BULLET);
+            if (_movx > 0)
+                w.set(x, y, WORLD_BULLET_RIGHT);
+            else if (_movx < 0)
+                w.set(x, y, WORLD_BULLET_LEFT);
+            else if (_movy < 0)
+                w.set(x, y, WORLD_BULLET_UP);
+            else
+                w.set(x, y, WORLD_BULLET_DOWN);
         }
         else
         {

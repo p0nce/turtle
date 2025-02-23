@@ -429,20 +429,20 @@ class Player
                 {
                     for (i = -2; i <= 2; i++) 
                     {
-                        w.setSecure(x + i, y + j, /* tron.WORLD_EMPTY */ 0);
+                        w.setSecure(x + i, y + j, WORLD_EMPTY);
                     }
                 }
 
                 switch((this._team - 1) & 7)
                 {
-                    case 0: debris = /* tron.WORLD_WALL_WHITE  */ -9; break;
-                    case 1: debris = /* tron.WORLD_WALL_RED    */ -11; break;
-                    case 2: debris = /* tron.WORLD_WALL_VIOLET */ -13; break;
-                    case 3: debris = /* tron.WORLD_WALL_PINK   */ -12; break;
-                    case 4: debris = /* tron.WORLD_WALL_GREEN  */ -6; break;
-                    case 5: debris = /* tron.WORLD_WALL_YELLOW */ -8; break;
-                    case 6: debris = /* tron.WORLD_WALL_CYAN   */ -15; break;
-                    case 7: default: debris = /* tron.WORLD_WALL_ORANGE */ -7;
+                    case 0: debris = WORLD_WALL_WHITE; break;
+                    case 1: debris = WORLD_WALL_RED; break;
+                    case 2: debris = WORLD_WALL_VIOLET; break;
+                    case 3: debris = WORLD_WALL_PINK; break;
+                    case 4: debris = WORLD_WALL_GREEN; break;
+                    case 5: debris = WORLD_WALL_YELLOW; break;
+                    case 6: debris = WORLD_WALL_CYAN; break;
+                    case 7: default: debris = WORLD_WALL_ORANGE;
                 }
 
                 for (j = -1; j <= 1; j++) 
