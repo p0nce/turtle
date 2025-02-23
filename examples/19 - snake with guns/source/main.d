@@ -24,9 +24,9 @@ class SnakeExample : TurtleGame
         _audio = new AudioManager(1337); // fake object
 
         _textures = new TextureManager(3);
-        _textures.add("img/players4.png", 256, 128);
-        _textures.add("img/otherstiles.png", 16, 304);    
-        _textures.add("img/eyes.png", 16, 256);
+        _textures.add("img/players4.png");
+        _textures.add("img/otherstiles.png");
+        _textures.add("img/eyes.png");
 
         newGame();
         time = 0;
@@ -61,7 +61,7 @@ class SnakeExample : TurtleGame
         ImageRef!RGBA fb = framebuffer();
         if (needRender)
         {
-            RGBA bg = RGBA(234, 245, 255, 255);
+            RGBA bg = RGBA(255, 255, 255, 255);//RGBA(234, 245, 255, 255);
             framebuffer.fillAll(bg);
             _game.render(framebuffer);
             needRender = false;

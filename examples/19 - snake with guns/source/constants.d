@@ -3,6 +3,9 @@ module constants;
 import std.random;
 import dplug.core.vec;
 
+enum int TILE_WIDTH_IN_PIXELS = 13;
+enum int TILE_HEIGHT_IN_PIXELS = 13;
+
 enum int 
     MAX_PLAYERS = 8;
 

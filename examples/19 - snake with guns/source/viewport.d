@@ -13,6 +13,8 @@ import world;
 import colors;
 
 
+
+
 // Stateful thing whose task is to display the surroundings of a player
 // It owns a Camera to that purpose.
 // originally used complex caching to avoid HTML5 Canvas redraw
@@ -82,16 +84,16 @@ class Viewport
         // get tiles to display
         world.getTiles(camx, camy, tx, ty, _newArray, _scratch);
 
-        RGBA8 bg8 = color("#eaf5ff").toRGBA8();
+        RGBA8 bg8 = color(/*"#eaf5ff"*/"#ffffff").toRGBA8();
         RGBA bg = RGBA(bg8.r, bg8.g, bg8.b, bg8.a);
 
         int screenW = fb.w;
         int screenH = fb.h;
-        int scaleX = screenW / (16 * tx);
-        int scaleY = screenH / (16 * ty);
+        int scaleX = screenW / (TILE_WIDTH_IN_PIXELS * tx);
+        int scaleY = screenH / (TILE_HEIGHT_IN_PIXELS * ty);
         int scale = scaleX < scaleY ? scaleX : scaleY;
-        int marginX = (screenW - scale * 16 * tx)/2;
-        int marginY = (screenH - scale * 16 * ty)/2;
+        int marginX = (screenW - scale * TILE_WIDTH_IN_PIXELS * tx)/2;
+        int marginY = (screenH - scale * TILE_HEIGHT_IN_PIXELS * ty)/2;
 
         for (int j = 0; j < ty; j++) 
         {
@@ -99,20 +101,26 @@ class Viewport
             {
                 // tile to draw
                 int newOne = _newArray[i+j*tx];
-
-                int destX = marginX + i * 16 * scale;
-                int destY = marginY + j * 16 * scale;
+                int destX = marginX + i * TILE_WIDTH_IN_PIXELS * scale;
+                int destY = marginY + j * TILE_HEIGHT_IN_PIXELS * scale;
 
                 if (newOne > EMPTY_TILE) 
                 {
-                    int y = (newOne & 0x70); // select row base on team
-                    int x = (newOne & 15) * 16;
-                    drawImageCopy(fb, playersimg, x , y, 16, 16, destX, destY, scale);
+                    // There is only 8 teams for now
+                    int team = (newOne & 0x70) >> 4;
+                    int y = team * TILE_HEIGHT_IN_PIXELS; // select row base on team
+                    int x = (newOne & 15) * TILE_WIDTH_IN_PIXELS;
+                    drawImageCopy(fb, playersimg, x , y, TILE_WIDTH_IN_PIXELS, TILE_HEIGHT_IN_PIXELS, destX, destY, scale);
                 }
                 else if (newOne < EMPTY_TILE) 
                 {
-                    int x = ((-newOne - 2) /* & 15*/ ) * 16;
-                    drawImageCopy(fb, othersimg, 0, x, 16, 16, destX, destY, scale);
+                    int y = ((-newOne - 2) /* & 15*/ ) * TILE_HEIGHT_IN_PIXELS;
+                    drawImageCopy(fb, 
+                                  othersimg, 
+                                  0, 
+                                  y, 
+                                  TILE_WIDTH_IN_PIXELS, 
+                                  TILE_HEIGHT_IN_PIXELS, destX, destY, scale);
                 }
                 else
                 {
@@ -129,26 +137,26 @@ class Viewport
             {
                 int x = (tplayer._posx - camx) & world._widthMask;
                 int y = (tplayer._posy - camy) & world._heightMask;
-                int j = 16 * tplayer._dir;
+                int j = TILE_WIDTH_IN_PIXELS * tplayer._dir;
                 if (tplayer._invincibility > 0)
                 {
 	                continue;
                 }
                 else if (tplayer._warning > 0)
                 {
-	                j += 64;
+	                j += TILE_HEIGHT_IN_PIXELS*4;
                 }
                 else if (tplayer._turbo)
                 {
-	                j += 128;
+	                j += TILE_HEIGHT_IN_PIXELS*8;
                 }
 
-                int destX = marginX + x * 16 * scale;
-                int destY = marginY + y * 16 * scale;
+                int destX = marginX + x * TILE_WIDTH_IN_PIXELS * scale;
+                int destY = marginY + y * TILE_HEIGHT_IN_PIXELS * scale;
 
                 if ((x >= 0) && (x < tx) && (y >= 0) && (y < ty))
                 {
-                    drawImage(fb, eyesimg, 0, j, 16, 16, destX, destY, scale);
+                    drawImage(fb, eyesimg, 0, j, TILE_WIDTH_IN_PIXELS, TILE_HEIGHT_IN_PIXELS, destX, destY, scale);
                 }
             }
         }

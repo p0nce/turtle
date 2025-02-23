@@ -9,9 +9,9 @@ class TextureManager
         _textures.length = n;        
     }
 
-    void add(const(char)[] path, int w, int h)
+    void add(const(char)[] path)
     {
-        _textures[_count].loadFromFile(path);
+        _textures[_count].loadFromFile(path, LOAD_NO_PREMUL);
         if (_textures[_count].isError)
             throw new Exception("Couldn't load image");
         _textures[_count].convertTo(PixelType.rgba8);
