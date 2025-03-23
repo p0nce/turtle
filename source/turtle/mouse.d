@@ -64,13 +64,13 @@ class Mouse
     /// Hide mouse cursor.
     void hide()
     {
-        SDL_ShowCursor(SDL_DISABLE);
+        SDL_HideCursor();
     }
 
     /// Show mouse cursor.
     void show()
     {
-        SDL_ShowCursor(SDL_ENABLE);
+        SDL_ShowCursor();
     }
 
 package:

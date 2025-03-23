@@ -3,6 +3,5 @@
   "targetType": "executable",
   "dependencies": {
     "turtle": { "path": "../.." },
-  },
-  "versions": [ "SDL_209" ]
+  }
 }

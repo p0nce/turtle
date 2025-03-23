@@ -2,7 +2,8 @@ import turtle;
 import world;
 import biomes;
 
-// TODO finish
+// Basically right now it's an example of how to do infinite 2D chunked world
+
 int main(string[] args)
 {
     runGame(new LaserWorldExample);
@@ -33,7 +34,7 @@ class LaserWorldExample : TurtleGame
     {
         setBackgroundColor( RGBA(32, 32, 32, 255) );
         console.size(GX, GY);
-        console.palette(TM_Palette.tango);
+        console.palette(TM_paletteTango);
         uint seed;
         createWorld(seed);
     }

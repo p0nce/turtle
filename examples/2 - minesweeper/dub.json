@@ -4,6 +4,5 @@
   "dependencies": {
     "turtle": { "path": "../.." },
     "game-mixer": "~>1.0"
-  },
-  "versions": [ "SDL_209" ]
+  }
 }

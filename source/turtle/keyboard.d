@@ -21,7 +21,8 @@ class Keyboard
     bool isDown(KeyConstant key)
     {
         SDL_Keycode sdlk = getSDLKeycodeFromKey(key);
-        SDL_Scancode sdlsc = SDL_GetScancodeFromKey(sdlk);
+        ushort* modState = null; // TODO: incorrect
+        SDL_Scancode sdlsc = SDL_GetScancodeFromKey(sdlk, modState);
         return _state[ sdlsc ];
     }
     ///ditto
@@ -40,7 +41,8 @@ class Keyboard
     bool isDownOnce(KeyConstant key)
     {
         SDL_Keycode sdlk = getSDLKeycodeFromKey(key);
-        SDL_Scancode sdlsc = SDL_GetScancodeFromKey(sdlk);
+        ushort* modState = null; // TODO: incorrect?
+        SDL_Scancode sdlsc = SDL_GetScancodeFromKey(sdlk, modState);
         bool r = _state[ sdlsc ];
         markKeyAsReleased(sdlsc);
         return r;
@@ -80,7 +82,8 @@ package:
         return oldState;
     }
 
-    bool[SDL_NUM_SCANCODES] _state;
+    enum SDL_NUM_SCANCODES = 512; // from porting guide
+    bool[SDL_NUM_SCANCODES] _state; // should be a map eventually?
 }
 
 private:
@@ -113,30 +116,30 @@ static immutable KeyData[] allKeys =
     KeyData("KP_8", SDLK_KP_8),
     KeyData("KP_9", SDLK_KP_9),
 
-    KeyData("a", SDLK_a),
-    KeyData("b", SDLK_b),
-    KeyData("c", SDLK_c),
-    KeyData("d", SDLK_d),
-    KeyData("e", SDLK_e),
-    KeyData("f", SDLK_f),
-    KeyData("g", SDLK_g),
-    KeyData("h", SDLK_h),
-    KeyData("i", SDLK_i),
-    KeyData("j", SDLK_j),
-    KeyData("k", SDLK_k),
-    KeyData("l", SDLK_l),
-    KeyData("m", SDLK_m),
-    KeyData("n", SDLK_n),
-    KeyData("o", SDLK_o),
-    KeyData("p", SDLK_p),
-    KeyData("q", SDLK_q),
-    KeyData("r", SDLK_r),
-    KeyData("s", SDLK_s),
-    KeyData("t", SDLK_t),
-    KeyData("u", SDLK_u),
-    KeyData("v", SDLK_v),
-    KeyData("w", SDLK_w),
-    KeyData("x", SDLK_x),
-    KeyData("y", SDLK_y),
-    KeyData("z", SDLK_z),
+    KeyData("a", SDLK_A),
+    KeyData("b", SDLK_B),
+    KeyData("c", SDLK_C),
+    KeyData("d", SDLK_D),
+    KeyData("e", SDLK_E),
+    KeyData("f", SDLK_F),
+    KeyData("g", SDLK_G),
+    KeyData("h", SDLK_H),
+    KeyData("i", SDLK_I),
+    KeyData("j", SDLK_J),
+    KeyData("k", SDLK_K),
+    KeyData("l", SDLK_L),
+    KeyData("m", SDLK_M),
+    KeyData("n", SDLK_N),
+    KeyData("o", SDLK_O),
+    KeyData("p", SDLK_P),
+    KeyData("q", SDLK_Q),
+    KeyData("r", SDLK_R),
+    KeyData("s", SDLK_S),
+    KeyData("t", SDLK_T),
+    KeyData("u", SDLK_U),
+    KeyData("v", SDLK_V),
+    KeyData("w", SDLK_W),
+    KeyData("x", SDLK_X),
+    KeyData("y", SDLK_Y),
+    KeyData("z", SDLK_Z),
 ];

@@ -229,7 +229,8 @@ private:
         // Load override
         load();
 
-        SDL_StartTextInput();
+        // TODO: sounds like bad idea to always have text input right? also coupled
+        SDL_StartTextInput(cast(SDL_Window*)_graphics.getWindowObject()); 
 
         uint ticks = _graphics.getTicks(); 
 
@@ -240,48 +241,41 @@ private:
             {
                 switch(event.type)
                 {
-                    case SDL_WINDOWEVENT:
-                        {
-                            uint windowID = _graphics.getWindowID();
-                            if (event.window.windowID != windowID)  
-                                continue;
+                    case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                    {
+                        uint windowID = _graphics.getWindowID();
+                        if (event.window.windowID != windowID)  
+                            continue;
 
-                            switch (event.window.event)
-                            {
-                                case SDL_WINDOWEVENT_CLOSE:
-                                    event.type = SDL_QUIT;
-                                    SDL_PushEvent(&event);
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
-                        }
-
-                    case SDL_KEYDOWN:
-                    case SDL_KEYUP:
+                        event.type = SDL_EVENT_QUIT;
+                        SDL_PushEvent(&event);
+                        break;
+                    }
+  
+                    case SDL_EVENT_KEY_DOWN:
+                    case SDL_EVENT_KEY_UP:
                         updateKeyboard(&event.key);
 
                         // Callback if this is a known key
-                        SDL_Keycode keycode = event.key.keysym.sym;
+                        SDL_Keycode keycode = event.key.key;
                         KeyConstant keyConstant = Keyboard.getKeyFromSDLKeycode(keycode);
 
                         if (keyConstant !is null) // if a known key
                         {
-                            if (event.type == SDL_KEYDOWN)
+                            if (event.type == SDL_EVENT_KEY_DOWN)
                                 keyPressed(keyConstant);
                         }
                         break;
 
-                    case SDL_TEXTINPUT:
+                    case SDL_EVENT_TEXT_INPUT:
                     {
-                        char* ptext = event.text.text.ptr;
+                        const(char)* ptext = event.text.text;
                         string text = ptext[0..strlen(ptext)].idup;
                         keyPressed(text);
                         break;
                     }
 
-                    case SDL_MOUSEMOTION:
+                    case SDL_EVENT_MOUSE_MOTION:
                     {
                         SDL_MouseMotionEvent* mevent = &event.motion;
                         _mouse._x = mevent.x;
@@ -290,8 +284,8 @@ private:
                         break;
                     }
 
-                    case SDL_MOUSEBUTTONUP:
-                    case SDL_MOUSEBUTTONDOWN:
+                    case SDL_EVENT_MOUSE_BUTTON_UP:
+                    case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     {
                         SDL_MouseButtonEvent* mevent = &event.button;
                         _mouse._x = mevent.x;
@@ -300,7 +294,7 @@ private:
                             goto default;
                         MouseButton button = convertSDLButtonToMouseButton(mevent.button);
 
-                        if (event.type == SDL_MOUSEBUTTONDOWN)
+                        if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
                         {
                             _mouse.markAsPressed(button);
                             mousePressed(mevent.x, mevent.y, button, mevent.clicks);
@@ -313,14 +307,14 @@ private:
                         break;
                     }
 
-                    case SDL_MOUSEWHEEL:
+                    case SDL_EVENT_MOUSE_WHEEL:
                     {
                         SDL_MouseWheelEvent* wevent = &event.wheel;
                         mouseWheel(wevent.x, wevent.y);
                         break;
                     }
 
-                    case SDL_QUIT:
+                    case SDL_EVENT_QUIT:
                         _gameShouldExit = true;
                         break;
 
@@ -337,7 +331,7 @@ private:
             // Cumulating here, so that the deltatime, when given in `update()`, doesn't drift vs this elapsedTime() if the user would sum it...
             // This is brittle, but hopefully you don't rely on _elapsedTime for anything long-term.
             _deltaTime = ticksDiff * 0.001;
-            _elapsedTime += _deltaTime;            
+            _elapsedTime += _deltaTime;
 
             // Update override
             update(_deltaTime);
@@ -382,7 +376,7 @@ private:
             renderer.endFrame();
         } 
         
-        SDL_StopTextInput();
+        SDL_StopTextInput(cast(SDL_Window*)_graphics.getWindowObject());
         _uiContext = null;
     }
 
@@ -394,14 +388,14 @@ private:
 
         switch (event.type)
         {
-            case SDL_KEYDOWN:
-                assert(event.state == SDL_PRESSED);
-                _keyboard.markKeyAsPressed(event.keysym.scancode);
+            case SDL_EVENT_KEY_DOWN:
+                assert(event.down == true);
+                _keyboard.markKeyAsPressed(event.scancode);
                 break;
 
-            case SDL_KEYUP:
-                assert(event.state == SDL_RELEASED);
-                _keyboard.markKeyAsReleased(event.keysym.scancode);
+            case SDL_EVENT_KEY_UP:
+                assert(event.down == false);
+                _keyboard.markKeyAsReleased(event.scancode);
                 break;
 
             default:

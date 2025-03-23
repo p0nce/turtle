@@ -6,8 +6,7 @@
 
     "dependencies": {
         "turtle": { "path": "../.." }
-    },
-    "versions": [ "SDL_209" ]
+    }
 }
 
 

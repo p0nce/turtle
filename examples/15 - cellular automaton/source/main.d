@@ -25,7 +25,7 @@ class CellAutomatonExample : TurtleGame
     {
         setBackgroundColor( RGBA(32, 32, 32, 255) );
         console.size(GX, GY);
-        console.palette(TM_Palette.tango);
+        console.palette(TM_paletteTango);
         makeNewGrid();
     }
 
@@ -133,8 +133,8 @@ class CellAutomatonExample : TurtleGame
         }
 
         console.locate(0, 0);
-        console.fg(TM_black);
-        console.bg(TM_white);
+        console.fg(TM_colorBlack);
+        console.bg(TM_colorWhite);
         console.cprintln("Click LEFT to put cells    ");
         console.cprintln("Click RIGHT to remove cells");
         console.cprintln("Press SPACE to play/stop   ");

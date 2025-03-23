@@ -15,7 +15,10 @@ enum EMULATE_SDL = false;
 static if (EMULATE_SDL)
     import dsdl;
 else
+{
     import bindbc.sdl;
+    import bindbc.loader;
+}
 
 import turtle.renderer;
 import dplug.graphics;
@@ -37,7 +40,11 @@ interface IGraphics
 
     int getTicks();
 
+    // Return SDL Window ID
     uint getWindowID();
+
+    // return a SDL_Window* for further SDL calls
+    void* getWindowObject(); 
 
     void setTitle(const(char)[] title);
 }
@@ -60,23 +67,26 @@ class Graphics : IGraphics, IRenderer
             SDL_SetHint("SDL_HINT_RENDER_SCALE_QUALITY", "0");
             SDL_SetHint("SDL_HINT_VIDEO_HIGHDPI_ENABLED", "1");
         }
-        SDL_WindowFlags flags = SDL_WINDOW_SHOWN
-                              | SDL_WINDOW_RESIZABLE
+
+        SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE
                               | SDL_WINDOW_MOUSE_FOCUS
-                              //| SDL_WINDOW_FULLSCREEN_DESKTOP
                               | SDL_WINDOW_INPUT_FOCUS;
 
         if (enableHIDPI)
-            flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+            flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
-        _window = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1440, 1024, flags);
+        _window = SDL_CreateWindow("", 1440, 1024, flags);
 
         if (RENDERER)
         {
             enum SDL_RENDERER_ACCELERATED = 0x00000002;
             enum SDL_RENDERER_PRESENTVSYNC = 0x00000004;
-            _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED 
-                                                      | SDL_RENDERER_PRESENTVSYNC);
+
+            // Let SDL choose
+            _renderer = SDL_CreateRenderer(_window, null);
+
+            // TODO: prefer accelerated and vsync?
+            // Rate all available renderers?
         }
 
         _buffer = new OwnedImage!RGBA;
@@ -119,41 +129,38 @@ class Graphics : IGraphics, IRenderer
             // intercept relevant events
             switch(event.type)
             {
-                case SDL_KEYDOWN:
+                case SDL_EVENT_KEY_DOWN:
                 {
-                    auto key = event.key.keysym;
-                    if (key.sym == SDLK_RETURN && ((key.mod & KMOD_ALT) != 0))
+                    SDL_KeyboardEvent* key = &event.key;
+                    if (key.key == SDLK_RETURN && ((key.mod & MOD_ALT) != 0))
                         toggleFullscreen();
-                    else if (key.sym == SDLK_F11)
+                    else if (key.key == SDLK_F11)
                         toggleFullscreen();
                     break;
                 }
+                case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+                    // TODO is there anything to do here?
+                    // should test with changing DPI
+                    break;
 
-                case SDL_WINDOWEVENT:
+                // "Window has been resized to data1xdata2"
+                case SDL_EVENT_WINDOW_RESIZED: 
                 {
                     uint windowID = getWindowID();
                     if (event.window.windowID != windowID)  
                         break;
-                    switch (event.window.event)
-                    {
-                        case SDL_WINDOWEVENT_SIZE_CHANGED:
-                        
-                            int width = event.window.data1;
-                            int height = event.window.data2;
+                    int width = event.window.data1;
+                    int height = event.window.data2;
 
-                            if (RENDERER)
-                            {
-                                SDL_Rect r;
-                                r.x = 0;
-                                r.y = 0;
-                                r.w = width;
-                                r.h = height;
-                                SDL_RenderSetViewport(_renderer, &r);
-                            }
-                            break;
-                        
-                        default:
-                            break;
+                    if (RENDERER)
+                    {
+                        SDL_Rect r;
+                        r.x = 0;
+                        r.y = 0;
+                        r.w = width;
+                        r.h = height;
+                        // failure ignored here
+                        SDL_SetRenderViewport(_renderer, &r); 
                     }
                     break;
                 }
@@ -178,6 +185,11 @@ class Graphics : IGraphics, IRenderer
         return SDL_GetWindowID(_window);
     }
 
+    override void* getWindowObject()
+    {
+        return _window;
+    }
+
     // IRenderer
 
     /// Start drawing, return a Canvas initialized to the drawing area.
@@ -187,9 +199,9 @@ class Graphics : IGraphics, IRenderer
                              ImageRef!RGBA* framebuffer)
     {
  
-        // Get size of window.
+        // Get size of window. TODO Failure ignored here.
         int w, h;
-        SDL_GetRendererOutputSize(_renderer, &w, &h);
+        SDL_GetRenderOutputSize(_renderer, &w, &h);
 
         if ((_lastKnownWidth != w) || (_lastKnownHeight != h))
         {
@@ -277,7 +289,7 @@ class Graphics : IGraphics, IRenderer
 
         void* pixels;
         int pitch;
-        if (0 == SDL_LockTexture(_texture, null, &pixels, &pitch))
+        if (SDL_LockTexture(_texture, null, &pixels, &pitch))
         {
             // copy pixels
             for (int y = 0; y < _lastKnownHeight; ++y)
@@ -289,8 +301,13 @@ class Graphics : IGraphics, IRenderer
 
             SDL_UnlockTexture(_texture);
         }
+        else
+        {
+            // TODO do something sensible
+            return;
+        }
 
-        SDL_RenderCopy(_renderer, _texture, null, null);
+        SDL_RenderTexture(_renderer, _texture, null, null);
         SDL_RenderPresent(_renderer);
     }
 
@@ -315,14 +332,18 @@ private:
 
     void toggleFullscreen()
     {
+        // fullscreen means "borderless full size window", not
+        // exclusive mode.
+        SDL_SetWindowFullscreenMode(_window, null);
+
         _isFullscreen = !_isFullscreen;
         if (_isFullscreen)
         {
-            SDL_SetWindowFullscreen(_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+            SDL_SetWindowFullscreen(_window, true);
         }
         else
         {
-            SDL_SetWindowFullscreen(_window, cast(SDL_WindowFlags)0);
+            SDL_SetWindowFullscreen(_window, false);
         }
     }
 
@@ -338,10 +359,24 @@ private:
 
     void loadSDLLibrary()
     {
-        SDLSupport ret = loadSDL();
-
-        if(ret == SDLSupport.noLibrary) {
-            throw new Exception("SDL shared library failed to load.");
+        LoadMsg ret = loadSDL();
+        if(ret != LoadMsg.success)
+        {
+            /*
+            Error handling. For most use cases, it's best to use the error handling API in
+            BindBC-Loader to retrieve error messages for logging and then abort.
+            If necessary, it's possible to determine the root cause via the return value:
+            */
+            if(ret == LoadMsg.noLibrary)
+            {
+                throw new Exception("The SDL shared library failed to load");
+            } 
+            else if(ret == LoadMsg.badLibrary)
+            {
+                throw new Exception("One or more symbols failed to load. The likely cause is that"~
+                                    "the shared library is for a lower version than BindBC-SDL was"~
+                                    "configured to load.");
+            }
         }
     }
 
