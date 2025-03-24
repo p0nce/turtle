@@ -35,7 +35,7 @@ public:
     }
 
     /// Immediate UI system, put your UI calls here.
-    override void gui()
+    void gui()
     {
         // by default: no immediate UI
     }
