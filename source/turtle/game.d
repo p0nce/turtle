@@ -9,8 +9,6 @@ import turtle.graphics;
 import turtle.renderer;
 import turtle.keyboard;
 import turtle.mouse;
-import turtle.node2d;
-import turtle.ui.uicontext;
 import canvasity;
 
 /// Inherit from this to make a game.
@@ -122,14 +120,6 @@ protected:
         return _mouse;
     }
 
-    /// Get UI context object.
-    /// This is a global pointed to by every widget in the UI.
-    /// However, its lifetime is handled by Game.
-    IUIContext uiContext()
-    {
-        return _uiContext;
-    }
-
     /// Width of the window. Can only be used inside a `draw` override.
     double windowWidth()
     {
@@ -177,12 +167,6 @@ protected:
         _graphics.setTitle(title);
     }
 
-    /// Root of the scene.
-    Node root()
-    {
-        return _root;
-    }
-
     // </API>
 
 private:
@@ -203,10 +187,6 @@ private:
     Keyboard _keyboard;
     Mouse _mouse;
 
-    Node _root; // root of the scene
-
-    UIContext _uiContext; // UI global state.
-
     IGraphics _graphics;
 
     TM_Console _console;
@@ -217,8 +197,6 @@ private:
 
         _keyboard = new Keyboard;
         _mouse = new Mouse;
-        _root = new Node;
-        _uiContext = new UIContext; // By default, the "model" is the application object itself. 
 
         // Default console size, you can change it in your `load()` function.
         _console.size(40, 25);
@@ -335,7 +313,6 @@ private:
 
             // Update override
             update(_deltaTime);
-            root.doUpdate(_deltaTime);
 
             IRenderer renderer = _graphics.getRenderer();
 
@@ -377,7 +354,6 @@ private:
         } 
         
         SDL_StopTextInput(cast(SDL_Window*)_graphics.getWindowObject());
-        _uiContext = null;
     }
 
     void updateKeyboard(const(SDL_KeyboardEvent*) event)

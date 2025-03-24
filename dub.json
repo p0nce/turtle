@@ -18,7 +18,5 @@
         "colors": "~>0.0",
         "canvasity": "~>1.0",
         "text-mode": "~>1.0"
-    },
-
-    "versions": ["SDL_3_4"]
+    }
 }
