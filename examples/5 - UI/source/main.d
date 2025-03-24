@@ -45,6 +45,10 @@ class UIExample : TurtleGame
     {
     }
 
+    override void gui()
+    {
+    }
+
     override void draw()
     {
     }

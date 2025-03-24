@@ -34,6 +34,12 @@ public:
         // by default: do nothing
     }
 
+    /// Immediate UI system, put your UI calls here.
+    override void gui()
+    {
+        // by default: no immediate UI
+    }
+
     /// Called whenever the window is resized. Override this function in your game.
     void resized(float width, float height)
     {
