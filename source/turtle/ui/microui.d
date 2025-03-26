@@ -25,17 +25,19 @@ module turtle.ui.microui;
 // microui.h:
 
 // A summary of modifications for D use:
-// - colors handled by `colors` packages**z
+// - colors handled by `colors` package
 // - <functions>_ex replaced by default arguments
 
 // TODO: stop relying on strtod, since C locale will wreak this
-// TODO: clearly separate public from private API
+// TODO: cleanly separate public from private API
+// TODO: remove the nu_ prefix or put trampoline into Game
 
 import core.stdc.string: memset, strlen, memcpy;
 import core.stdc.stdlib: strtod, qsort;
 import core.stdc.stdio: sprintf;
 
 import colors;
+import dplug.graphics.font;
 
 nothrow @nogc:
 
@@ -234,28 +236,28 @@ struct mu_IconCommand
 
 union mu_Command
 {
-  int type;
-  mu_BaseCommand base;
-  mu_JumpCommand jump;
-  mu_ClipCommand clip;
-  mu_RectCommand rect;
-  mu_TextCommand text;
-  mu_IconCommand icon;
+    int type;
+    mu_BaseCommand base;
+    mu_JumpCommand jump;
+    mu_ClipCommand clip;
+    mu_RectCommand rect;
+    mu_TextCommand text;
+    mu_IconCommand icon;
 }
 
 struct mu_Layout
 {
-  mu_Rect body;
-  mu_Rect next;
-  mu_Vec2 position;
-  mu_Vec2 size;
-  mu_Vec2 max;
-  int[MU_MAX_WIDTHS] widths;
-  int items;
-  int item_index;
-  int next_row;
-  int next_type;
-  int indent;
+    mu_Rect body;
+    mu_Rect next;
+    mu_Vec2 position;
+    mu_Vec2 size;
+    mu_Vec2 max;
+    int[MU_MAX_WIDTHS] widths;
+    int items;
+    int item_index;
+    int next_row;
+    int next_type;
+    int indent;
 }
 
 struct mu_Container
@@ -409,12 +411,12 @@ void mu_end_panel(mu_Context *ctx);
 enum unclipped_rect = mu_Rect(0, 0, 0x1000000, 0x1000000);
 
 
-mu_Style default_style()
+mu_Style default_style(Font font)
 {
     return mu_Style
     (
         /* font | size | padding | spacing | indent */
-        null, mu_Vec2(68, 10), 5, 4, 24,
+        cast(void*)font, mu_Vec2(68, 10), 5, 4, 24,
         /* title_height | scrollbar_size | thumb_size */
         24, 12, 8,
         [
@@ -484,11 +486,11 @@ void draw_frame(mu_Context *ctx, mu_Rect rect, int colorid)
 }
 
 
-void mu_init(mu_Context *ctx) 
+void mu_init(mu_Context *ctx, Font font) 
 {
     memset(ctx, 0, mu_Context.sizeof);
     ctx.draw_frame = &draw_frame;
-    ctx._style = default_style;
+    ctx._style = default_style(font);
     ctx.style = &ctx._style;
 }
 
@@ -871,7 +873,7 @@ void mu_draw_text(mu_Context *ctx, mu_Font font, const(char)* str, int len,
     if (len < 0) { len = istrlen(str); }
     cmd = mu_push_command(ctx, MU_COMMAND_TEXT, cast(int)(mu_TextCommand.sizeof) + len);
     memcpy(cmd.text.str.ptr, str, len);
-    cmd.text.str[len] = '\0';
+    cmd.text.str.ptr[len] = '\0'; // do not perform bounds here, since it's out of struct
     cmd.text.pos = pos;
     cmd.text.color = color;
     cmd.text.font = font;

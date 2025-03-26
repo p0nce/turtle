@@ -4,6 +4,8 @@ import core.stdc.string: strlen;
 import core.stdc.stdlib: malloc, free;
 import bindbc.sdl;
 import dplug.canvas;
+import dplug.core.nogc;
+import dplug.graphics.font;
 import colors;
 import textmode;
 import turtle.graphics;
@@ -12,6 +14,14 @@ import turtle.keyboard;
 import turtle.mouse;
 import canvasity;
 import turtle.ui.microui;
+
+
+/// Main call to put in your main.d/app.d
+void runGame(TurtleGame game)
+{
+    game.run();
+    destroy(game);
+}
 
 /// Inherit from this to make a game.
 class TurtleGame
@@ -205,6 +215,10 @@ private:
     TM_Console _console;
     mu_Context* _mu_Context;
 
+    // eventually those two should go into mu_Context
+    Font _uiFont = null;
+    float _uiFontsizePx = 16.0f;
+
     void run()
     {
         assert(!_gameShouldExit);
@@ -218,10 +232,12 @@ private:
         _graphics = createGraphics();
         scope(exit) destroy(_graphics);  
 
+        setUIFont( import("Lato-Semibold-stripped.ttf") );
+
         _mu_Context = cast(mu_Context*) malloc(mu_Context.sizeof);
-        mu_init(_mu_Context);
-        _mu_Context.text_width = null;//18;
-        _mu_Context.text_height = null;//18;
+        mu_init(_mu_Context, _uiFont);
+        _mu_Context.text_width = &measureTextWidth;
+        _mu_Context.text_height = &measureTextHeight;
         
         // Load override
         load();
@@ -432,15 +448,60 @@ private:
                 break;
         }
     }
+
+    // TODO: single API point for "ui"
+    // temporary
+    void setUIFont(const(void)[] fontBinary)
+    {
+        destroyFree(_uiFont);
+        _uiFont = null;
+        _uiFont = mallocNew!Font(cast(ubyte[]) fontBinary);
+    }
+
+    // temporary
+    void setUIFontSize(float fontSizePx)
+    {
+        _uiFontsizePx = fontSizePx;
+    }
+
+    ~this()
+    {
+        destroyFree(_uiFont);
+    }
+
+   
 }
 
+private:
+nothrow @nogc:
 
-void runGame(TurtleGame game)
+/+
+// pass this since callback doesn't have a fontSize.
+struct mu_FontContext
 {
-    game.run();
-    destroy(game);
+    Game game;
+    Font font;
+}+/
+
+int measureTextWidth(mu_Font font, const(char)*str, int len)
+{
+    float fontSizePx = 18.0f;
+    Font dplugFont = cast(Font)font;
+    assert(dplugFont);
+    if (len == -1) len = cast(int) strlen(str);
+    box2i b = dplugFont.measureText(str[0..len], fontSizePx, 0);
+    return b.width;
 }
 
+int measureTextHeight(mu_Font font)
+{
+    float fontSizePx = 18.0f;
+    // TODO Not sure what microUI wanted here: lineGap or size of cap?
+    Font dplugFont = cast(Font)font;
+    assert(dplugFont);
+    box2i b = dplugFont.measureText("A", fontSizePx, 0);
+    return b.height;
+}
 
 MouseButton convertSDLButtonToMouseButton(int button)
 {

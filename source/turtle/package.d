@@ -14,9 +14,7 @@ public import turtle.game;
 public import turtle.keyboard;
 public import turtle.mouse;
 //public import canvasity;
-
 public import turtle.ui.microui;
-
 public import textmode;
 
 
