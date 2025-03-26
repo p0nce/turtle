@@ -6,6 +6,8 @@ import bindbc.sdl;
 import dplug.canvas;
 import dplug.core.nogc;
 import dplug.graphics.font;
+import dplug.graphics.image;
+import dplug.graphics.draw;
 import colors;
 import textmode;
 import turtle.graphics;
@@ -396,18 +398,23 @@ private:
                 {
                     if (cmd.type == MU_COMMAND_TEXT) 
                     {
-                      /*  render_text(cmd.text.font, 
-                                    cmd.text.text, 
-                                    cmd.text.pos.x, 
-                                    cmd.text.pos.y, 
-                                    cmd.text.color); */
+                        RGBA8 c = cmd.rect.color.toRGBA8();
+                        RGBA c2 = RGBA(c.r, c.g, c.b, c.a);
+
+                        int len = cast(int) strlen(cmd.text.str.ptr);
+                        const(char)[] s = cmd.text.str.ptr[0..len];
+                        _framebuffer.fillText(_uiFont, s, _uiFontsizePx, 0, c2, cmd.text.pos.x, cmd.text.pos.y,
+                                              HorizontalAlignment.left, VerticalAlignment.hanging);
                     }
-                    if (cmd.type == MU_COMMAND_RECT) 
+                    else if (cmd.type == MU_COMMAND_RECT) 
                     {
-                        //render_rect(cmd.rect.rect, 
-                        //            cmd.rect.color);
+                        mu_Rect r = cmd.rect.rect;
+                        box2i r2 = box2i.rectangle(r.x, r.y, r.w, r.h);
+                        RGBA8 c = cmd.rect.color.toRGBA8();
+                        RGBA c2 = RGBA(c.r, c.g, c.b, c.a);
+                        _framebuffer.fillRectFloat(r2.min.x, r2.min.y, r2.max.x, r2.max.y, c2, c.a / 255.0f);
                     }
-                    if (cmd.type == MU_COMMAND_ICON) 
+                    else if (cmd.type == MU_COMMAND_ICON) 
                     {
                         //render_icon(cmd.icon.id, cmd.icon.rect, cmd.icon.color);
                     }

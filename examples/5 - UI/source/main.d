@@ -47,7 +47,7 @@ class UIExample : TurtleGame
 
     override void gui()
     {
-        if (mu_begin_window(ui, "My Window", mu_rect(10, 10, 300, 400))) 
+        if (mu_begin_window(ui, "Fucking testing ABCDEF", mu_rect(10, 10, 300, 400))) 
         {
             /* process ui here... */
             mu_end_window(ui);
