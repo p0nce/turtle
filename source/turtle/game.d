@@ -1,6 +1,7 @@
 module turtle.game;
 
 import core.stdc.string: strlen;
+import core.stdc.stdlib: malloc, free;
 import bindbc.sdl;
 import dplug.canvas;
 import colors;
@@ -10,6 +11,7 @@ import turtle.renderer;
 import turtle.keyboard;
 import turtle.mouse;
 import canvasity;
+import turtle.ui.microui;
 
 /// Inherit from this to make a game.
 class TurtleGame
@@ -126,6 +128,13 @@ protected:
         return _mouse;
     }
 
+    /// The microUI context.
+    /// Use it in the `gui` callback to create your UI (always on top).
+    mu_Context* ui()
+    {
+        return _mu_Context;
+    }
+
     /// Width of the window. Can only be used inside a `draw` override.
     double windowWidth()
     {
@@ -191,11 +200,10 @@ private:
     RGBA8 _backgroundColor = RGBA8(0, 0, 0, 255);
 
     Keyboard _keyboard;
-    Mouse _mouse;
-
+    Mouse _mouse;    
     IGraphics _graphics;
-
     TM_Console _console;
+    mu_Context* _mu_Context;
 
     void run()
     {
@@ -208,8 +216,13 @@ private:
         _console.size(40, 25);
 
         _graphics = createGraphics();
-        scope(exit) destroy(_graphics);   
+        scope(exit) destroy(_graphics);  
 
+        _mu_Context = cast(mu_Context*) malloc(mu_Context.sizeof);
+        mu_init(_mu_Context);
+        _mu_Context.text_width = null;//18;
+        _mu_Context.text_height = null;//18;
+        
         // Load override
         load();
 
@@ -220,6 +233,8 @@ private:
 
         while(!_gameShouldExit)
         {
+            // TODO: fetch events to microui
+
             SDL_Event event;
             while(_graphics.nextEvent(&event))
             {
@@ -353,6 +368,39 @@ private:
 
             // Draw console on top
             _console.render();
+
+            // Now, render/process immediate UI
+            {
+                mu_begin(_mu_Context);
+                gui();
+                mu_end(_mu_Context);
+
+                mu_Command *cmd = null;
+                while (mu_next_command(_mu_Context, &cmd)) 
+                {
+                    if (cmd.type == MU_COMMAND_TEXT) 
+                    {
+                      /*  render_text(cmd.text.font, 
+                                    cmd.text.text, 
+                                    cmd.text.pos.x, 
+                                    cmd.text.pos.y, 
+                                    cmd.text.color); */
+                    }
+                    if (cmd.type == MU_COMMAND_RECT) 
+                    {
+                        //render_rect(cmd.rect.rect, 
+                        //            cmd.rect.color);
+                    }
+                    if (cmd.type == MU_COMMAND_ICON) 
+                    {
+                        //render_icon(cmd.icon.id, cmd.icon.rect, cmd.icon.color);
+                    }
+                    if (cmd.type == MU_COMMAND_CLIP) 
+                    {
+                       // set_clip_rect(cmd.clip.rect);
+                    }
+                }
+            }
 
             _frameCanvas = null;
             _framebuffer = ImageRef!RGBA.init;

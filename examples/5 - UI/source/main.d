@@ -47,6 +47,11 @@ class UIExample : TurtleGame
 
     override void gui()
     {
+        if (mu_begin_window(ui, "My Window", mu_rect(10, 10, 300, 400))) 
+        {
+            /* process ui here... */
+            mu_end_window(ui);
+        }
     }
 
     override void draw()

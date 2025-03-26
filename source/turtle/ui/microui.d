@@ -24,14 +24,18 @@ module turtle.ui.microui;
 
 // microui.h:
 
-// TODO: replace mu_Color by Color
-// TODO: replace _ex functions by default arguments
+// A summary of modifications for D use:
+// - colors handled by `colors` packages**z
+// - <functions>_ex replaced by default arguments
+
 // TODO: stop relying on strtod, since C locale will wreak this
 // TODO: clearly separate public from private API
 
 import core.stdc.string: memset, strlen, memcpy;
 import core.stdc.stdlib: strtod, qsort;
 import core.stdc.stdio: sprintf;
+
+import colors;
 
 nothrow @nogc:
 
@@ -181,11 +185,6 @@ struct mu_Rect
     int x, y, w, h; 
 }
 
-struct mu_Color
-{ 
-    ubyte r, g, b, a; 
-}
-
 struct mu_PoolItem
 { 
     mu_Id id; 
@@ -213,7 +212,7 @@ struct mu_RectCommand
 { 
     mu_BaseCommand base; 
     mu_Rect rect; 
-    mu_Color color; 
+    Color color; 
 }
 
 struct mu_TextCommand
@@ -221,7 +220,7 @@ struct mu_TextCommand
     mu_BaseCommand base; 
     mu_Font font; 
     mu_Vec2 pos; 
-    mu_Color color; 
+    Color color; 
     char[1] str; 
 }
 
@@ -229,7 +228,8 @@ struct mu_IconCommand
 { 
     mu_BaseCommand base; 
     mu_Rect rect; 
-    int id; mu_Color color; 
+    int id; 
+    Color color; 
 } 
 
 union mu_Command
@@ -279,7 +279,7 @@ struct mu_Style
     int title_height;
     int scrollbar_size;
     int thumb_size;
-    mu_Color[MU_COLOR_MAX] colors;
+    Color[MU_COLOR_MAX] colors;
 }
 
 struct mu_Context 
@@ -335,6 +335,7 @@ struct mu_Context
 // <PUBLIC API>
 //
 
+/*
 mu_Vec2 mu_vec2(int x, int y);
 mu_Rect mu_rect(int x, int y, int w, int h);
 mu_Color mu_color(int r, int g, int b, int a);
@@ -365,8 +366,8 @@ void mu_input_text(mu_Context *ctx, const(char)* text);
 mu_Command* mu_push_command(mu_Context *ctx, int type, int size);
 int mu_next_command(mu_Context *ctx, mu_Command **cmd);
 void mu_set_clip(mu_Context *ctx, mu_Rect rect);
-void mu_draw_rect(mu_Context *ctx, mu_Rect rect, mu_Color color);
-void mu_draw_box(mu_Context *ctx, mu_Rect rect, mu_Color color);
+void mu_draw_rect(mu_Context *ctx, mu_Rect rect, Color color);
+void mu_draw_box(mu_Context *ctx, mu_Rect rect, Color color);
 void mu_draw_text(mu_Context *ctx, mu_Font font, const(char)* str, int len, mu_Vec2 pos, mu_Color color);
 void mu_draw_icon(mu_Context *ctx, int id, mu_Rect rect, mu_Color color);
 void mu_layout_row(mu_Context *ctx, int items, const(int)* widths, int height);
@@ -381,62 +382,25 @@ void mu_draw_control_text(mu_Context *ctx, const(char) *str, mu_Rect rect, int c
 int mu_mouse_over(mu_Context *ctx, mu_Rect rect);
 void mu_update_control(mu_Context *ctx, mu_Id id, mu_Rect rect, int opt);
 
-int mu_button(mu_Context *ctx, const(char) *label)
-{
-    return mu_button_ex(ctx, label, 0, MU_OPT_ALIGNCENTER);
-}
-
-int mu_textbox(mu_Context *ctx, char *buf, int bufsz)
-{
-    return mu_textbox_ex(ctx, buf, bufsz, 0);
-}
-
-int mu_slider(mu_Context *ctx, mu_Real *value, mu_Real lo, mu_Real hi)
-{
-    return mu_slider_ex(ctx, value, lo, hi, 0, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER);
-}
-
-int mu_number(mu_Context *ctx, mu_Real *value, mu_Real step)
-{
-    return mu_number_ex(ctx, value, step, MU_SLIDER_FMT, MU_OPT_ALIGNCENTER);
-}
-
-int mu_header(mu_Context *ctx, const(char) *label)
-{
-    return mu_header_ex(ctx, label, 0);
-}
-   
-int mu_begin_treenode(mu_Context *ctx, const(char) *label, int opt)
-{
-    return mu_begin_treenode_ex(ctx, label, 0);
-}
-int mu_begin_window(mu_Context *ctx, const(char) *title, mu_Rect rect)
-{
-    return mu_begin_window_ex(ctx, title, rect, 0);
-}
-void mu_begin_panel(mu_Context *ctx, const(char) *name)
-{
-    return mu_begin_panel_ex(ctx, name, 0);
-}
-
 void mu_text(mu_Context *ctx, const(char) *text);
 void mu_label(mu_Context *ctx, const(char) *text);
-int mu_button_ex(mu_Context *ctx, const(char) *label, int icon, int opt);
+int mu_button(mu_Context *ctx, const(char) *label, int icon = 0, int opt = MU_OPT_ALIGNCENTER);
 int mu_checkbox(mu_Context *ctx, const(char) *label, int *state);
-int mu_textbox_raw(mu_Context *ctx, char *buf, int bufsz, mu_Id id, mu_Rect r, int opt);
-int mu_textbox_ex(mu_Context *ctx, char *buf, int bufsz, int opt);
-int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high, mu_Real step, const(char) *fmt, int opt);
-int mu_number_ex(mu_Context *ctx, mu_Real *value, mu_Real step, const(char) *fmt, int opt);
-int mu_header_ex(mu_Context *ctx, const(char) *label, int opt);
-int mu_begin_treenode_ex(mu_Context *ctx, const(char) *label, int opt);
+int mu_textbox_raw(mu_Context *ctx, char *buf, int bufsz, mu_Id id, mu_Rect r, int opt = 0);
+int mu_textbox(mu_Context *ctx, char *buf, int bufsz, int opt = 0);
+int mu_slider(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high, mu_Real step, const(char) *fmt, int opt);
+int mu_number(mu_Context *ctx, mu_Real *value, mu_Real step, const(char) *fmt = MU_SLIDER_FMT, int opt = MU_OPT_ALIGNCENTER); 
+int mu_header(mu_Context *ctx, const(char) *label, int opt = 0);
+int mu_begin_treenode(mu_Context *ctx, const(char) *label, int opt = 0);
 void mu_end_treenode(mu_Context *ctx);
-int mu_begin_window_ex(mu_Context *ctx, const(char) *title, mu_Rect rect, int opt);
+int mu_begin_window(mu_Context *ctx, const(char) *title, mu_Rect rect, int opt = 0);
 void mu_end_window(mu_Context *ctx);
 void mu_open_popup(mu_Context *ctx, const(char) *name);
 int mu_begin_popup(mu_Context *ctx, const(char) *name);
 void mu_end_popup(mu_Context *ctx);
-void mu_begin_panel_ex(mu_Context *ctx, const(char) *name, int opt);
+void mu_begin_panel(mu_Context *ctx, const(char) *name, int opt = 0);
 void mu_end_panel(mu_Context *ctx);
+*/
 
 //
 // </PUBLIC API>
@@ -454,20 +418,20 @@ mu_Style default_style()
         /* title_height | scrollbar_size | thumb_size */
         24, 12, 8,
         [
-            mu_Color(230, 230, 230, 255 ), /* MU_COLOR_TEXT */
-            mu_Color(25,  25,  25,  255 ), /* MU_COLOR_BORDER */
-            mu_Color(50,  50,  50,  255 ), /* MU_COLOR_WINDOWBG */
-            mu_Color(25,  25,  25,  255 ), /* MU_COLOR_TITLEBG */
-            mu_Color(240, 240, 240, 255 ), /* MU_COLOR_TITLETEXT */
-            mu_Color(0,   0,   0,   0   ), /* MU_COLOR_PANELBG */
-            mu_Color(75,  75,  75,  255 ), /* MU_COLOR_BUTTON */
-            mu_Color(95,  95,  95,  255 ), /* MU_COLOR_BUTTONHOVER */
-            mu_Color(115, 115, 115, 255 ), /* MU_COLOR_BUTTONFOCUS */
-            mu_Color(30,  30,  30,  255 ), /* MU_COLOR_BASE */
-            mu_Color(35,  35,  35,  255 ), /* MU_COLOR_BASEHOVER */
-            mu_Color(40,  40,  40,  255 ), /* MU_COLOR_BASEFOCUS */
-            mu_Color(43,  43,  43,  255 ), /* MU_COLOR_SCROLLBASE */
-            mu_Color(30,  30,  30,  255 )  /* MU_COLOR_SCROLLTHUMB */
+            Color(RGBA8(230, 230, 230, 255 )), /* MU_COLOR_TEXT */
+            Color(RGBA8(25,  25,  25,  255 )), /* MU_COLOR_BORDER */
+            Color(RGBA8(50,  50,  50,  255 )), /* MU_COLOR_WINDOWBG */
+            Color(RGBA8(25,  25,  25,  255 )), /* MU_COLOR_TITLEBG */
+            Color(RGBA8(240, 240, 240, 255 )), /* MU_COLOR_TITLETEXT */
+            Color(RGBA8(0,   0,   0,   0   )), /* MU_COLOR_PANELBG */
+            Color(RGBA8(75,  75,  75,  255 )), /* MU_COLOR_BUTTON */
+            Color(RGBA8(95,  95,  95,  255 )), /* MU_COLOR_BUTTONHOVER */
+            Color(RGBA8(115, 115, 115, 255 )), /* MU_COLOR_BUTTONFOCUS */
+            Color(RGBA8(30,  30,  30,  255 )), /* MU_COLOR_BASE */
+            Color(RGBA8(35,  35,  35,  255 )), /* MU_COLOR_BASEHOVER */
+            Color(RGBA8(40,  40,  40,  255 )), /* MU_COLOR_BASEFOCUS */
+            Color(RGBA8(43,  43,  43,  255 )), /* MU_COLOR_SCROLLBASE */
+            Color(RGBA8(30,  30,  30,  255 ))  /* MU_COLOR_SCROLLTHUMB */
         ]
     );
 }
@@ -475,7 +439,6 @@ mu_Style default_style()
 
 mu_Vec2 mu_vec2(int x, int y) => mu_Vec2(x, y);
 mu_Rect mu_rect(int x, int y, int w, int h) => mu_Rect(x, y, w, h);
-mu_Color mu_color(int r, int g, int b, int a) => mu_Color(cast(ubyte)r, cast(ubyte)g, cast(ubyte)b, cast(ubyte)a);
 
 
 mu_Rect expand_rect(mu_Rect rect, int n) 
@@ -513,9 +476,10 @@ void draw_frame(mu_Context *ctx, mu_Rect rect, int colorid)
     }
 
     /* draw border */
-    if (ctx.style.colors[MU_COLOR_BORDER].a) 
+    Color borderCol = ctx.style.colors[MU_COLOR_BORDER];
+    if (borderCol.toRGBA8.a) // FUTURE: isFullyTransparent
     {
-        mu_draw_box(ctx, expand_rect(rect, 1), ctx.style.colors[MU_COLOR_BORDER]);
+        mu_draw_box(ctx, expand_rect(rect, 1), borderCol);
     }
 }
 
@@ -876,7 +840,7 @@ void mu_set_clip(mu_Context *ctx, mu_Rect rect) {
 }
 
 
-void mu_draw_rect(mu_Context *ctx, mu_Rect rect, mu_Color color) {
+void mu_draw_rect(mu_Context *ctx, mu_Rect rect, Color color) {
     mu_Command *cmd;
     rect = intersect_rects(rect, mu_get_clip_rect(ctx));
     if (rect.w > 0 && rect.h > 0) {
@@ -887,16 +851,16 @@ void mu_draw_rect(mu_Context *ctx, mu_Rect rect, mu_Color color) {
 }
 
 
-void mu_draw_box(mu_Context *ctx, mu_Rect rect, mu_Color color) {
+void mu_draw_box(mu_Context *ctx, mu_Rect rect, Color color) {
     mu_draw_rect(ctx, mu_rect(rect.x + 1, rect.y, rect.w - 2, 1), color);
     mu_draw_rect(ctx, mu_rect(rect.x + 1, rect.y + rect.h - 1, rect.w - 2, 1), color);
     mu_draw_rect(ctx, mu_rect(rect.x, rect.y, 1, rect.h), color);
     mu_draw_rect(ctx, mu_rect(rect.x + rect.w - 1, rect.y, 1, rect.h), color);
 }
 
-void mu_draw_text(mu_Context *ctx, mu_Font font, const(char)* str, int len, mu_Vec2 pos, mu_Color color);
+void mu_draw_text(mu_Context *ctx, mu_Font font, const(char)* str, int len, mu_Vec2 pos, Color color);
 void mu_draw_text(mu_Context *ctx, mu_Font font, const(char)* str, int len,
-                  mu_Vec2 pos, mu_Color color)
+                  mu_Vec2 pos, Color color)
 {
     mu_Command *cmd;
     mu_Rect rect = mu_rect(pos.x, pos.y, ctx.text_width(font, str, len), ctx.text_height(font));
@@ -916,7 +880,7 @@ void mu_draw_text(mu_Context *ctx, mu_Font font, const(char)* str, int len,
 }
 
 
-void mu_draw_icon(mu_Context *ctx, int id, mu_Rect rect, mu_Color color) {
+void mu_draw_icon(mu_Context *ctx, int id, mu_Rect rect, Color color) {
     mu_Command *cmd;
     /* do clip command if the rect isn't fully contained within the cliprect */
     int clipped = mu_check_clip(ctx, rect);
@@ -1124,7 +1088,7 @@ void mu_text(mu_Context *ctx, const(char)* text)
     const(char)* start, end, p = text;
     int width = -1;
     mu_Font font = ctx.style.font;
-    mu_Color color = ctx.style.colors[MU_COLOR_TEXT];
+    Color color = ctx.style.colors[MU_COLOR_TEXT];
     mu_layout_begin_column(ctx);
     mu_layout_row(ctx, 1, &width, ctx.text_height(font));
     do {
@@ -1150,7 +1114,7 @@ void mu_label(mu_Context *ctx, const(char)* text) {
     mu_draw_control_text(ctx, text, mu_layout_next(ctx), MU_COLOR_TEXT, 0);
 }
 
-int mu_button_ex(mu_Context *ctx, const(char)* label, int icon, int opt) {
+int mu_button(mu_Context *ctx, const(char)* label, int icon = 0, int opt = MU_OPT_ALIGNCENTER) {
     int res = 0;
     mu_Id id = label ? mu_get_id(ctx, label, istrlen(label))
         : mu_get_id(ctx, &icon, isizeof!icon);
@@ -1191,7 +1155,7 @@ int mu_checkbox(mu_Context *ctx, const(char)* label, int *state) {
 
 
 int mu_textbox_raw(mu_Context *ctx, char *buf, int bufsz, mu_Id id, mu_Rect r,
-                   int opt)
+                   int opt = 0)
 {
     int res = 0;
     mu_update_control(ctx, id, r, opt | MU_OPT_HOLDFOCUS);
@@ -1224,7 +1188,7 @@ int mu_textbox_raw(mu_Context *ctx, char *buf, int bufsz, mu_Id id, mu_Rect r,
     /* draw */
     mu_draw_control_frame(ctx, id, r, MU_COLOR_BASE, opt);
     if (ctx.focus == id) {
-        mu_Color color = ctx.style.colors[MU_COLOR_TEXT];
+        Color color = ctx.style.colors[MU_COLOR_TEXT];
         mu_Font font = ctx.style.font;
         int textw = ctx.text_width(font, buf, -1);
         int texth = ctx.text_height(font);
@@ -1266,7 +1230,7 @@ int number_textbox(mu_Context *ctx, mu_Real *value, mu_Rect r, mu_Id id)
 }
 
 
-int mu_textbox_ex(mu_Context *ctx, char *buf, int bufsz, int opt) 
+int mu_textbox(mu_Context *ctx, char *buf, int bufsz, int opt = 0) 
 {
     mu_Id id = mu_get_id(ctx, &buf, cast(int) buf.sizeof);
     mu_Rect r = mu_layout_next(ctx);
@@ -1274,8 +1238,8 @@ int mu_textbox_ex(mu_Context *ctx, char *buf, int bufsz, int opt)
 }
 
 
-int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
-                 mu_Real step, const(char) *fmt, int opt)
+int mu_slider(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
+              mu_Real step = 0, const(char) *fmt = MU_SLIDER_FMT, int opt = MU_OPT_ALIGNCENTER)
 {
     char[MU_MAX_FMT + 1] buf;
     mu_Rect thumb;
@@ -1319,8 +1283,8 @@ int mu_slider_ex(mu_Context *ctx, mu_Real *value, mu_Real low, mu_Real high,
 }
 
 
-int mu_number_ex(mu_Context *ctx, mu_Real *value, mu_Real step,
-                 const(char)* fmt, int opt)
+int mu_number(mu_Context *ctx, mu_Real *value, mu_Real step,
+                 const(char)* fmt = MU_SLIDER_FMT, int opt = MU_OPT_ALIGNCENTER)
 {
     char[MU_MAX_FMT + 1] buf;
     int res = 0;
@@ -1401,12 +1365,14 @@ int header(mu_Context *ctx, const(char)* label, int istreenode, int opt)
 }
 
 
-int mu_header_ex(mu_Context *ctx, const(char)* label, int opt) {
+int mu_header(mu_Context *ctx, const(char)* label, int opt = 0) 
+{
     return header(ctx, label, 0, opt);
 }
 
 
-int mu_begin_treenode_ex(mu_Context *ctx, const(char)* label, int opt) {
+int mu_begin_treenode(mu_Context *ctx, const(char)* label, int opt = 0) 
+{
     int res = header(ctx, label, 1, opt);
     if (res & MU_RES_ACTIVE) {
         get_layout(ctx).indent += ctx.style.indent;
@@ -1566,7 +1532,7 @@ void end_root_container(mu_Context *ctx)
 }
 
 
-int mu_begin_window_ex(mu_Context *ctx, const(char)* title, mu_Rect rect, int opt) 
+int mu_begin_window(mu_Context *ctx, const(char)* title, mu_Rect rect, int opt = 0) 
 {
     mu_Rect body;
     mu_Id id = mu_get_id(ctx, title, istrlen(title));
@@ -1659,7 +1625,7 @@ void mu_end_window(mu_Context *ctx)
 void mu_open_popup(mu_Context *ctx, const(char)* name) 
 {
     mu_Container *cnt = mu_get_container(ctx, name);
-    /* set as hover root so popup isn't closed in begin_window_ex()  */
+    /* set as hover root so popup isn't closed in begin_window()  */
     ctx.hover_root = ctx.next_hover_root = cnt;
     /* position at mouse cursor, open and bring-to-front */
     cnt.rect = mu_rect(ctx.mouse_pos.x, ctx.mouse_pos.y, 1, 1);
@@ -1671,7 +1637,7 @@ int mu_begin_popup(mu_Context *ctx, const(char)* name)
 {
     int opt = MU_OPT_POPUP | MU_OPT_AUTOSIZE | MU_OPT_NORESIZE |
         MU_OPT_NOSCROLL | MU_OPT_NOTITLE | MU_OPT_CLOSED;
-    return mu_begin_window_ex(ctx, name, mu_rect(0, 0, 0, 0), opt);
+    return mu_begin_window(ctx, name, mu_rect(0, 0, 0, 0), opt);
 }
 
 void mu_end_popup(mu_Context *ctx) 
@@ -1679,7 +1645,7 @@ void mu_end_popup(mu_Context *ctx)
     mu_end_window(ctx);
 }
 
-void mu_begin_panel_ex(mu_Context *ctx, const(char)* name, int opt) 
+void mu_begin_panel(mu_Context *ctx, const(char)* name, int opt = 0) 
 {
     mu_Container *cnt;
     mu_push_id(ctx, name, istrlen(name));
