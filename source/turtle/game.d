@@ -25,6 +25,9 @@ void runGame(TurtleGame game)
     destroy(game);
 }
 
+// TODO: proper UI object with proper API
+enum FONT_SIZE_UI = 30;
+
 /// Inherit from this to make a game.
 class TurtleGame
 {
@@ -199,6 +202,7 @@ protected:
 private:
     Canvas* _frameCanvas = null;
     Canvasity* _frameCanvasity = null;
+
     ImageRef!RGBA _framebuffer;
     float _windowWidth = 0.0f, 
           _windowHeight = 0.0f;
@@ -219,7 +223,8 @@ private:
 
     // eventually those two should go into mu_Context
     Font _uiFont = null;
-    float _uiFontsizePx = 16.0f;
+    float _uiFontsizePx = FONT_SIZE_UI;
+    Canvas _canvasIcon;
 
     void run()
     {
@@ -253,6 +258,10 @@ private:
         {
             // TODO: fetch events to microui
 
+            //void mu_input_keydown(mu_Context *ctx, int key)
+            //void mu_input_keyup(mu_Context *ctx, int key)
+            //void mu_input_text(mu_Context *ctx, const(char)*text) 
+
             SDL_Event event;
             while(_graphics.nextEvent(&event))
             {
@@ -282,6 +291,7 @@ private:
                             if (event.type == SDL_EVENT_KEY_DOWN)
                                 keyPressed(keyConstant);
                         }
+
                         break;
 
                     case SDL_EVENT_TEXT_INPUT:
@@ -298,6 +308,7 @@ private:
                         _mouse._x = mevent.x;
                         _mouse._y = mevent.y;
                         mouseMoved(mevent.x, mevent.y, mevent.xrel, mevent.yrel);
+                        mu_input_mousemove(_mu_Context, cast(int)mevent.x, cast(int)mevent.y);
                         break;
                     }
 
@@ -321,6 +332,25 @@ private:
                             _mouse.markAsReleased(button);
                             mouseReleased(mevent.x, mevent.y, button);
                         }
+
+                        // microui
+
+                        int ui_button = -1;
+                        switch (mevent.button)
+                        {
+                            case SDL_BUTTON_LEFT: ui_button = MU_MOUSE_LEFT; break;
+                            case SDL_BUTTON_RIGHT: ui_button = MU_MOUSE_RIGHT; break;
+                            case SDL_BUTTON_MIDDLE: ui_button = MU_MOUSE_MIDDLE; break;
+                            default: break;
+                        }
+
+                        if (ui_button != -1)
+                        {
+                            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+                                mu_input_mousedown(_mu_Context, cast(int)mevent.x, cast(int)mevent.y, ui_button);
+                            else
+                                mu_input_mouseup(_mu_Context, cast(int)mevent.x, cast(int)mevent.y, ui_button);                            
+                        }
                         break;
                     }
 
@@ -328,6 +358,7 @@ private:
                     {
                         SDL_MouseWheelEvent* wevent = &event.wheel;
                         mouseWheel(wevent.x, wevent.y);
+                        mu_input_scroll(_mu_Context, cast(int)wevent.x, cast(int)wevent.y);
                         break;
                     }
 
@@ -393,6 +424,14 @@ private:
                 gui();
                 mu_end(_mu_Context);
 
+                // PERF: redundant if framebuffer hasn't changed its size
+                _canvasIcon.initialize(_framebuffer);
+
+                static box2i convertMuRectToBox2i(mu_Rect r)
+                {
+                    return box2i.rectangle(r.x, r.y, r.w, r.h);
+                }
+
                 mu_Command *cmd = null;
                 while (mu_next_command(_mu_Context, &cmd)) 
                 {
@@ -408,19 +447,87 @@ private:
                     }
                     else if (cmd.type == MU_COMMAND_RECT) 
                     {
-                        mu_Rect r = cmd.rect.rect;
-                        box2i r2 = box2i.rectangle(r.x, r.y, r.w, r.h);
+                        box2i r2 = convertMuRectToBox2i(cmd.rect.rect);
                         RGBA8 c = cmd.rect.color.toRGBA8();
                         RGBA c2 = RGBA(c.r, c.g, c.b, c.a);
                         _framebuffer.fillRectFloat(r2.min.x, r2.min.y, r2.max.x, r2.max.y, c2, c.a / 255.0f);
                     }
                     else if (cmd.type == MU_COMMAND_ICON) 
                     {
-                        //render_icon(cmd.icon.id, cmd.icon.rect, cmd.icon.color);
+                        box2i r = convertMuRectToBox2i(cmd.icon.rect);
+                        switch(cmd.icon.id)
+                        {
+                        case MU_ICON_CLOSE:
+
+                            // Draw a cross
+                            //   A   C
+                            //  / \ / \
+                            // L   B  D
+                            //  \     /
+                            //   K   E
+                            //  /     \
+                            // J   H   F
+                            //  \ / \ /
+                            //   I   G
+                            float e00 = 0.28;
+                            float e25 = 0.39;
+                            float e50 = 0.5;
+                            float e75 = 0.61;
+                            float e100 = 0.72;
+                            float x0 = r.min.x * e100 + r.max.x *  e00;
+                            float x1 = r.min.x *  e75 + r.max.x *  e25;
+                            float x2 = r.min.x *  e50 + r.max.x *  e50;
+                            float x3 = r.min.x *  e25 + r.max.x *  e75;
+                            float x4 = r.min.x *  e00 + r.max.x * e100;
+                            float y0 = r.min.y * e100 + r.max.y *  e00;
+                            float y1 = r.min.y *  e75 + r.max.y *  e25;
+                            float y2 = r.min.y *  e50 + r.max.y *  e50;
+                            float y3 = r.min.y *  e25 + r.max.y *  e75;
+                            float y4 = r.min.y *  e00 + r.max.y * e100;
+
+                            with(_canvasIcon)
+                            {
+                                fillStyle = cmd.icon.color;
+                                beginPath();
+                                moveTo(x1, y0);
+                                lineTo(x2, y1);
+                                lineTo(x3, y0);
+                                lineTo(x4, y1);
+                                lineTo(x3, y2);
+                                lineTo(x4, y3);
+                                lineTo(x3, y4);
+                                lineTo(x2, y3);
+                                lineTo(x1, y4);
+                                lineTo(x0, y3);
+                                lineTo(x1, y2);
+                                lineTo(x0, y1);
+                                closePath();
+                                fill();
+                            }
+                            break;
+
+                        // checkbox icon
+                        case MU_ICON_CHECK:
+                            // TODO
+                            break;
+
+                        // collapsed >
+                        case MU_ICON_COLLAPSED:
+                            // TODO
+                            break;
+
+                        // collapsed v
+                        case MU_ICON_EXPANDED:
+                            // TODO
+                            break;
+
+                        default:
+                            assert(false);
+                        }
                     }
                     if (cmd.type == MU_COMMAND_CLIP) 
                     {
-                       // set_clip_rect(cmd.clip.rect);
+                        // no support for now!
                     }
                 }
             }
@@ -492,7 +599,7 @@ struct mu_FontContext
 
 int measureTextWidth(mu_Font font, const(char)*str, int len)
 {
-    float fontSizePx = 18.0f;
+    float fontSizePx = FONT_SIZE_UI;
     Font dplugFont = cast(Font)font;
     assert(dplugFont);
     if (len == -1) len = cast(int) strlen(str);
@@ -502,7 +609,7 @@ int measureTextWidth(mu_Font font, const(char)*str, int len)
 
 int measureTextHeight(mu_Font font)
 {
-    float fontSizePx = 18.0f;
+    float fontSizePx = FONT_SIZE_UI;
     // TODO Not sure what microUI wanted here: lineGap or size of cap?
     Font dplugFont = cast(Font)font;
     assert(dplugFont);

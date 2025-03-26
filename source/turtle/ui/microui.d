@@ -38,6 +38,7 @@ import core.stdc.stdio: sprintf;
 
 import colors;
 import dplug.graphics.font;
+import dplug.math;
 
 nothrow @nogc:
 
@@ -416,9 +417,9 @@ mu_Style default_style(Font font)
     return mu_Style
     (
         /* font | size | padding | spacing | indent */
-        cast(void*)font, mu_Vec2(68, 10), 5, 4, 24,
+        cast(void*)font, mu_Vec2(68, 10), 5*2, 4*2, 24*2,
         /* title_height | scrollbar_size | thumb_size */
-        24, 12, 8,
+        24*2, 12*2, 8*2,
         [
             Color(RGBA8(230, 230, 230, 255 )), /* MU_COLOR_TEXT */
             Color(RGBA8(25,  25,  25,  255 )), /* MU_COLOR_BORDER */
