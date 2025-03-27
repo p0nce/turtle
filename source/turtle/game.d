@@ -204,6 +204,7 @@ private:
     Canvasity* _frameCanvasity = null;
 
     ImageRef!RGBA _framebuffer;
+    ImageRef!RGBA _framebufferClipped;
     float _windowWidth = 0.0f, 
           _windowHeight = 0.0f;
 
@@ -419,13 +420,24 @@ private:
             _console.render();
 
             // Now, render/process immediate UI
+            // TODO: move this in wrapper UI object
             {
                 mu_begin(_mu_Context);
                 gui();
                 mu_end(_mu_Context);
 
-                // PERF: redundant if framebuffer hasn't changed its size
-                _canvasIcon.initialize(_framebuffer);
+                bool dirtyIconCanvas;
+
+                void updateClippedFb(box2i r)
+                {
+                    dirtyIconCanvas = true;
+                    // must only crop INSIDE the image rect
+                    r = r.intersection(rectangle(0, 0, _framebuffer.w, _framebuffer.h));
+                    _framebufferClipped = _framebuffer.cropImageRef(r);
+                }
+
+                // start with clip rect being full rectangle
+                updateClippedFb(box2i.rectangle(0, 0, _framebuffer.w, _framebuffer.h));
 
                 static box2i convertMuRectToBox2i(mu_Rect r)
                 {
@@ -442,7 +454,7 @@ private:
 
                         int len = cast(int) strlen(cmd.text.str.ptr);
                         const(char)[] s = cmd.text.str.ptr[0..len];
-                        _framebuffer.fillText(_uiFont, s, _uiFontsizePx, 0, c2, cmd.text.pos.x, cmd.text.pos.y,
+                        _framebufferClipped.fillText(_uiFont, s, _uiFontsizePx, 0, c2, cmd.text.pos.x, cmd.text.pos.y,
                                               HorizontalAlignment.left, VerticalAlignment.hanging);
                     }
                     else if (cmd.type == MU_COMMAND_RECT) 
@@ -450,10 +462,17 @@ private:
                         box2i r2 = convertMuRectToBox2i(cmd.rect.rect);
                         RGBA8 c = cmd.rect.color.toRGBA8();
                         RGBA c2 = RGBA(c.r, c.g, c.b, c.a);
-                        _framebuffer.fillRectFloat(r2.min.x, r2.min.y, r2.max.x, r2.max.y, c2, c.a / 255.0f);
+                        _framebufferClipped.fillRectFloat(r2.min.x, r2.min.y, r2.max.x, r2.max.y, c2, c.a / 255.0f);
                     }
                     else if (cmd.type == MU_COMMAND_ICON) 
                     {
+                        // lazy init icon canvas
+                        if (dirtyIconCanvas)
+                        {
+                            dirtyIconCanvas = false;
+                            _canvasIcon.initialize(_framebufferClipped);
+                        }
+
                         box2i r = convertMuRectToBox2i(cmd.icon.rect);
                         switch(cmd.icon.id)
                         {
@@ -527,7 +546,8 @@ private:
                     }
                     if (cmd.type == MU_COMMAND_CLIP) 
                     {
-                        // no support for now!
+                        box2i r = convertMuRectToBox2i(cmd.clip.rect);
+                        updateClippedFb(r);
                     }
                 }
             }

@@ -52,13 +52,15 @@ class UIExample : TurtleGame
         static void test_window(mu_Context *ctx) 
         {
             /* do window */
-            if (mu_begin_window(ctx, "Demo Window", mu_rect(40, 40, 300, 450))) {
+            if (mu_begin_window(ctx, "Demo Window", mu_rect(40, 40, 300, 450))) 
+            {
                 mu_Container *win = mu_get_current_container(ctx);
                 win.rect.w = mu_max(win.rect.w, 240);
                 win.rect.h = mu_max(win.rect.h, 300);
 
                 /* window info */
-                if (mu_header(ctx, "Window Info")) {
+                if (mu_header(ctx, "Window Info")) 
+                {
                     mu_Container *wi = mu_get_current_container(ctx);
                     char[64] buf;
                     mu_layout_row(ctx, 2, [ 54, -1 ].ptr, 0);
@@ -69,7 +71,8 @@ class UIExample : TurtleGame
                 }
 
                 /* labels + buttons */
-                if (mu_header(ctx, "Test Buttons", MU_OPT_EXPANDED)) {
+                if (mu_header(ctx, "Test Buttons", MU_OPT_EXPANDED)) 
+                {
                     mu_layout_row(ctx, 3, [ 86, -110, -1 ].ptr, 0);
                     mu_label(ctx, "Test buttons 1:");
                     if (mu_button(ctx, "Button 1")) { writeln("Pressed button 1"); }
@@ -85,23 +88,28 @@ class UIExample : TurtleGame
                 }
 
                 /* tree */
-                if (mu_header(ctx, "Tree and Text", MU_OPT_EXPANDED)) {
+                if (mu_header(ctx, "Tree and Text", MU_OPT_EXPANDED)) 
+                {
                     mu_layout_row(ctx, 2, [ 140, -1 ].ptr, 0);
                     mu_layout_begin_column(ctx);
-                    if (mu_begin_treenode(ctx, "Test 1")) {
-                        if (mu_begin_treenode(ctx, "Test 1a")) {
+                    if (mu_begin_treenode(ctx, "Test 1")) 
+                    {
+                        if (mu_begin_treenode(ctx, "Test 1a")) 
+                        {
                             mu_label(ctx, "Hello");
                             mu_label(ctx, "world");
                             mu_end_treenode(ctx);
                         }
-                        if (mu_begin_treenode(ctx, "Test 1b")) {
+                        if (mu_begin_treenode(ctx, "Test 1b")) 
+                        {
                             if (mu_button(ctx, "Button 1")) { writeln("Pressed button 1"); }
                             if (mu_button(ctx, "Button 2")) { writeln("Pressed button 2"); }
                             mu_end_treenode(ctx);
                         }
                         mu_end_treenode(ctx);
                     }
-                    if (mu_begin_treenode(ctx, "Test 2")) {
+                    if (mu_begin_treenode(ctx, "Test 2")) 
+                    {
                         mu_layout_row(ctx, 2, [ 54, 54 ].ptr, 0);
                         if (mu_button(ctx, "Button 3")) { writeln("Pressed button 3"); }
                         if (mu_button(ctx, "Button 4")) { writeln("Pressed button 4"); }
@@ -109,7 +117,8 @@ class UIExample : TurtleGame
                         if (mu_button(ctx, "Button 6")) { writeln("Pressed button 6"); }
                         mu_end_treenode(ctx);
                     }
-                    if (mu_begin_treenode(ctx, "Test 3")) {
+                    if (mu_begin_treenode(ctx, "Test 3")) 
+                    {
                         static int[3] checks = [ 1, 0, 1 ];
                         mu_checkbox(ctx, "Checkbox 1", &checks[0]);
                         mu_checkbox(ctx, "Checkbox 2", &checks[1]);
@@ -127,7 +136,8 @@ class UIExample : TurtleGame
                 }
 
                 /* background color sliders */
-                if (mu_header(ctx, "Background Color", MU_OPT_EXPANDED)) {
+                if (mu_header(ctx, "Background Color", MU_OPT_EXPANDED)) 
+                {
                     mu_layout_row(ctx, 2, [ -78, -1 ].ptr, 74);
                     /* sliders */
                     mu_layout_begin_column(ctx);
