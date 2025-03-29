@@ -145,9 +145,9 @@ protected:
 
     /// The microUI context.
     /// Use it in the `gui` callback to create your UI (always on top).
-    mu_Context* ui()
+    MicroUI ui()
     {
-        return _mu_Context;
+        return _mui;
     }
 
     /// Width of the window. Can only be used inside a `draw` override.
@@ -220,7 +220,7 @@ private:
     Mouse _mouse;    
     IGraphics _graphics;
     TM_Console _console;
-    mu_Context* _mu_Context;
+    MicroUI _mui;
 
     // eventually those two should go into mu_Context
     Font _uiFont = null;
