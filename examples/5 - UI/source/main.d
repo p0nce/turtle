@@ -59,7 +59,7 @@ class UIExample : TurtleGame
             /* window info */
             if (ui.header("Window Info")) 
             {
-                ui.Container *wi = ui.get_current_container(ctx);
+                ui.Container *wi = ui.get_current_container();
                 char[64] buf;
                 ui.layout_row(2, [ 54, -1 ].ptr, 0);
                 ui.label("Position:");
@@ -98,7 +98,7 @@ class UIExample : TurtleGame
                     {
                         ui.label("Hello");
                         ui.label("world");
-                        ui.end_treenode(ctx);
+                        ui.end_treenode();
                     }
                     if (ui.begin_treenode("Test 1b")) 
                     {
@@ -140,7 +140,7 @@ class UIExample : TurtleGame
             {
                 ui.layout_row(2, [ -78, -1 ].ptr, 74);
                 /* sliders */
-                ui.layout_begin_column(ctx);
+                ui.layout_begin_column();
                 ui.layout_row(2, [ 46, -1 ].ptr, 0);
                     
                 ui.label("Red:");   
@@ -149,9 +149,9 @@ class UIExample : TurtleGame
                 ui.slider(&bg[1], 0, 255);
                 ui.label("Blue:");  
                 ui.slider(&bg[2], 0, 255);
-                ui.layout_end_column(ctx);
+                ui.layout_end_column();
                 /* color preview */
-                ui.Rect r = ui.layout_next(ctx);
+                ui.Rect r = ui.layout_next();
                 ui.draw_rect(r, rgb(bg[0], bg[1], bg[2], 1.0));
                 char[32] buf;
                 sprintf(buf.ptr, "#%02X%02X%02X", cast(int) bg[0], cast(int) bg[1], cast(int) bg[2]);
