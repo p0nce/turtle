@@ -52,21 +52,20 @@ class UIExample : TurtleGame
         /* do window */
         if (ui.begin_window("Demo Window", ui.rect(40, 40, 300, 450))) 
         {
-            ui.Container* win = ui.get_current_container();
-            win.rect.w = max(win.rect.w, 240);
-            win.rect.h = max(win.rect.h, 300);
+            ui.current_container_min_size(240, 300);
 
             /* window info */
             if (ui.header("Window Info")) 
             {
-                ui.Container *wi = ui.get_current_container();
+                mu_Rect wi = ui.current_container_rect();
+
                 char[64] buf;
                 ui.layout_row(2, [ 54, -1 ].ptr, 0);
                 ui.label("Position:");
-                sprintf(buf.ptr, "%d, %d", wi.rect.x, wi.rect.y); 
+                sprintf(buf.ptr, "%d, %d", wi.x, wi.y); 
                 ui.label(buf.ptr);
                 ui.label("Size:");
-                sprintf(buf.ptr, "%d, %d", wi.rect.w, wi.rect.h); 
+                sprintf(buf.ptr, "%d, %d", wi.w, wi.h); 
                 ui.label(buf.ptr);
             }
 
@@ -80,7 +79,8 @@ class UIExample : TurtleGame
                 ui.label("Test buttons 2:");
                 if (ui.button("Button 3")) { writeln("Pressed button 3"); }
                 if (ui.button("Popup")) { ui.open_popup("Test Popup"); }
-                if (ui.begin_popup("Test Popup")) {
+                if (ui.begin_popup("Test Popup")) 
+                {
                     ui.button("Hello");
                     ui.button("World");
                     ui.end_popup();
@@ -151,14 +151,14 @@ class UIExample : TurtleGame
                 ui.slider(&bg[2], 0, 255);
                 ui.layout_end_column();
                 /* color preview */
-                ui.Rect r = ui.layout_next();
+                mu_Rect r = ui.layout_next();
                 ui.draw_rect(r, rgb(bg[0], bg[1], bg[2], 1.0));
                 char[32] buf;
                 sprintf(buf.ptr, "#%02X%02X%02X", cast(int) bg[0], cast(int) bg[1], cast(int) bg[2]);
                 ui.draw_control_text(buf.ptr, r, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
             }
 
-            ui.end_window(ctx);
+            ui.end_window();
         }
     }
 

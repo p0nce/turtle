@@ -25,8 +25,7 @@ void runGame(TurtleGame game)
     destroy(game);
 }
 
-// TODO: proper UI object with proper API
-enum FONT_SIZE_UI = 30;
+
 
 /// Inherit from this to make a game.
 class TurtleGame
@@ -204,7 +203,6 @@ private:
     Canvasity* _frameCanvasity = null;
 
     ImageRef!RGBA _framebuffer;
-    ImageRef!RGBA _framebufferClipped;
     float _windowWidth = 0.0f, 
           _windowHeight = 0.0f;
 
@@ -222,11 +220,6 @@ private:
     TM_Console _console;
     MicroUI _mui;
 
-    // eventually those two should go into mu_Context
-    Font _uiFont = null;
-    float _uiFontsizePx = FONT_SIZE_UI;
-    Canvas _canvasIcon;
-
     void run()
     {
         assert(!_gameShouldExit);
@@ -240,12 +233,10 @@ private:
         _graphics = createGraphics();
         scope(exit) destroy(_graphics);  
 
-        setUIFont( import("Lato-Semibold-stripped.ttf") );
-
-        _mu_Context = cast(mu_Context*) malloc(mu_Context.sizeof);
-        mu_init(_mu_Context, _uiFont);
-        _mu_Context.text_width = &measureTextWidth;
-        _mu_Context.text_height = &measureTextHeight;
+        
+        _mui = mallocNew!MicroUI();
+        _mui.setFont( import("Lato-Semibold-stripped.ttf") );
+       
         
         // Load override
         load();
@@ -309,7 +300,7 @@ private:
                         _mouse._x = mevent.x;
                         _mouse._y = mevent.y;
                         mouseMoved(mevent.x, mevent.y, mevent.xrel, mevent.yrel);
-                        mu_input_mousemove(_mu_Context, cast(int)mevent.x, cast(int)mevent.y);
+                        _mui.input_mousemove(cast(int)mevent.x, cast(int)mevent.y);
                         break;
                     }
 
@@ -339,18 +330,18 @@ private:
                         int ui_button = -1;
                         switch (mevent.button)
                         {
-                            case SDL_BUTTON_LEFT: ui_button = MU_MOUSE_LEFT; break;
-                            case SDL_BUTTON_RIGHT: ui_button = MU_MOUSE_RIGHT; break;
-                            case SDL_BUTTON_MIDDLE: ui_button = MU_MOUSE_MIDDLE; break;
+                            case SDL_BUTTON_LEFT: ui_button = MicroUI.MU_MOUSE_LEFT; break;
+                            case SDL_BUTTON_RIGHT: ui_button = MicroUI.MU_MOUSE_RIGHT; break;
+                            case SDL_BUTTON_MIDDLE: ui_button = MicroUI.MU_MOUSE_MIDDLE; break;
                             default: break;
                         }
 
                         if (ui_button != -1)
                         {
                             if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
-                                mu_input_mousedown(_mu_Context, cast(int)mevent.x, cast(int)mevent.y, ui_button);
+                                _mui.input_mousedown(cast(int)mevent.x, cast(int)mevent.y, ui_button);
                             else
-                                mu_input_mouseup(_mu_Context, cast(int)mevent.x, cast(int)mevent.y, ui_button);                            
+                                _mui.input_mouseup(cast(int)mevent.x, cast(int)mevent.y, ui_button);                            
                         }
                         break;
                     }
@@ -359,7 +350,7 @@ private:
                     {
                         SDL_MouseWheelEvent* wevent = &event.wheel;
                         mouseWheel(wevent.x, wevent.y);
-                        mu_input_scroll(_mu_Context, cast(int)wevent.x, cast(int)wevent.y);
+                        _mui.input_scroll(cast(int)wevent.x, cast(int)wevent.y);
                         break;
                     }
 
@@ -422,136 +413,13 @@ private:
             // Now, render/process immediate UI
             // TODO: move this in wrapper UI object
             {
-                mu_begin(_mu_Context);
+                _mui.begin();
                 gui();
-                mu_end(_mu_Context);
+                _mui.end();
 
-                bool dirtyIconCanvas;
-
-                void updateClippedFb(box2i r)
-                {
-                    dirtyIconCanvas = true;
-                    // must only crop INSIDE the image rect
-                    r = r.intersection(rectangle(0, 0, _framebuffer.w, _framebuffer.h));
-                    _framebufferClipped = _framebuffer.cropImageRef(r);
-                }
-
-                // start with clip rect being full rectangle
-                updateClippedFb(box2i.rectangle(0, 0, _framebuffer.w, _framebuffer.h));
-
-                static box2i convertMuRectToBox2i(mu_Rect r)
-                {
-                    return box2i.rectangle(r.x, r.y, r.w, r.h);
-                }
-
-                mu_Command *cmd = null;
-                while (mu_next_command(_mu_Context, &cmd)) 
-                {
-                    if (cmd.type == MU_COMMAND_TEXT) 
-                    {
-                        RGBA8 c = cmd.rect.color.toRGBA8();
-                        RGBA c2 = RGBA(c.r, c.g, c.b, c.a);
-
-                        int len = cast(int) strlen(cmd.text.str.ptr);
-                        const(char)[] s = cmd.text.str.ptr[0..len];
-                        _framebufferClipped.fillText(_uiFont, s, _uiFontsizePx, 0, c2, cmd.text.pos.x, cmd.text.pos.y,
-                                              HorizontalAlignment.left, VerticalAlignment.hanging);
-                    }
-                    else if (cmd.type == MU_COMMAND_RECT) 
-                    {
-                        box2i r2 = convertMuRectToBox2i(cmd.rect.rect);
-                        RGBA8 c = cmd.rect.color.toRGBA8();
-                        RGBA c2 = RGBA(c.r, c.g, c.b, c.a);
-                        _framebufferClipped.fillRectFloat(r2.min.x, r2.min.y, r2.max.x, r2.max.y, c2, c.a / 255.0f);
-                    }
-                    else if (cmd.type == MU_COMMAND_ICON) 
-                    {
-                        // lazy init icon canvas
-                        if (dirtyIconCanvas)
-                        {
-                            dirtyIconCanvas = false;
-                            _canvasIcon.initialize(_framebufferClipped);
-                        }
-
-                        box2i r = convertMuRectToBox2i(cmd.icon.rect);
-                        switch(cmd.icon.id)
-                        {
-                        case MU_ICON_CLOSE:
-
-                            // Draw a cross
-                            //   A   C
-                            //  / \ / \
-                            // L   B  D
-                            //  \     /
-                            //   K   E
-                            //  /     \
-                            // J   H   F
-                            //  \ / \ /
-                            //   I   G
-                            float e00 = 0.28;
-                            float e25 = 0.39;
-                            float e50 = 0.5;
-                            float e75 = 0.61;
-                            float e100 = 0.72;
-                            float x0 = r.min.x * e100 + r.max.x *  e00;
-                            float x1 = r.min.x *  e75 + r.max.x *  e25;
-                            float x2 = r.min.x *  e50 + r.max.x *  e50;
-                            float x3 = r.min.x *  e25 + r.max.x *  e75;
-                            float x4 = r.min.x *  e00 + r.max.x * e100;
-                            float y0 = r.min.y * e100 + r.max.y *  e00;
-                            float y1 = r.min.y *  e75 + r.max.y *  e25;
-                            float y2 = r.min.y *  e50 + r.max.y *  e50;
-                            float y3 = r.min.y *  e25 + r.max.y *  e75;
-                            float y4 = r.min.y *  e00 + r.max.y * e100;
-
-                            with(_canvasIcon)
-                            {
-                                fillStyle = cmd.icon.color;
-                                beginPath();
-                                moveTo(x1, y0);
-                                lineTo(x2, y1);
-                                lineTo(x3, y0);
-                                lineTo(x4, y1);
-                                lineTo(x3, y2);
-                                lineTo(x4, y3);
-                                lineTo(x3, y4);
-                                lineTo(x2, y3);
-                                lineTo(x1, y4);
-                                lineTo(x0, y3);
-                                lineTo(x1, y2);
-                                lineTo(x0, y1);
-                                closePath();
-                                fill();
-                            }
-                            break;
-
-                        // checkbox icon
-                        case MU_ICON_CHECK:
-                            // TODO
-                            break;
-
-                        // collapsed >
-                        case MU_ICON_COLLAPSED:
-                            // TODO
-                            break;
-
-                        // collapsed v
-                        case MU_ICON_EXPANDED:
-                            // TODO
-                            break;
-
-                        default:
-                            assert(false);
-                        }
-                    }
-                    if (cmd.type == MU_COMMAND_CLIP) 
-                    {
-                        box2i r = convertMuRectToBox2i(cmd.clip.rect);
-                        updateClippedFb(r);
-                    }
-                }
+                _mui.renderOnFramebuf(_framebuffer);
             }
-
+            
             _frameCanvas = null;
             _framebuffer = ImageRef!RGBA.init;
             renderer.endFrame();
@@ -583,26 +451,8 @@ private:
         }
     }
 
-    // TODO: single API point for "ui"
-    // temporary
-    void setUIFont(const(void)[] fontBinary)
-    {
-        destroyFree(_uiFont);
-        _uiFont = null;
-        _uiFont = mallocNew!Font(cast(ubyte[]) fontBinary);
-    }
 
-    // temporary
-    void setUIFontSize(float fontSizePx)
-    {
-        _uiFontsizePx = fontSizePx;
-    }
-
-    ~this()
-    {
-        destroyFree(_uiFont);
-    }
-
+    
    
 }
 
@@ -617,25 +467,7 @@ struct mu_FontContext
     Font font;
 }+/
 
-int measureTextWidth(mu_Font font, const(char)*str, int len)
-{
-    float fontSizePx = FONT_SIZE_UI;
-    Font dplugFont = cast(Font)font;
-    assert(dplugFont);
-    if (len == -1) len = cast(int) strlen(str);
-    box2i b = dplugFont.measureText(str[0..len], fontSizePx, 0);
-    return b.width;
-}
 
-int measureTextHeight(mu_Font font)
-{
-    float fontSizePx = FONT_SIZE_UI;
-    // TODO Not sure what microUI wanted here: lineGap or size of cap?
-    Font dplugFont = cast(Font)font;
-    assert(dplugFont);
-    box2i b = dplugFont.measureText("A", fontSizePx, 0);
-    return b.height;
-}
 
 MouseButton convertSDLButtonToMouseButton(int button)
 {
