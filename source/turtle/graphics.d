@@ -132,7 +132,7 @@ class Graphics : IGraphics, IRenderer
                 case SDL_EVENT_KEY_DOWN:
                 {
                     SDL_KeyboardEvent* key = &event.key;
-                    if (key.key == SDLK_RETURN && ((key.mod & MOD_ALT) != 0))
+                    if (key.key == SDLK_RETURN && ((key.mod & SDL_KMOD_ALT) != 0))
                         toggleFullscreen();
                     else if (key.key == SDLK_F11)
                         toggleFullscreen();
