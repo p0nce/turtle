@@ -157,6 +157,9 @@ public: // for users
         destroyFree(_uiFont);
         _uiFont = null;
         _uiFont = mallocNew!Font(cast(ubyte[]) fontBinary);
+
+        _style = default_style(_uiFont);
+        style = &_style;
     }
 
     /// Returns: UI root font-size in px.
@@ -364,6 +367,7 @@ public: // for users
 
     int begin_window(const(char)* title, mu_Rect rect, int opt = 0) 
     {
+        assert(style !is null);
         mu_Rect body;
         mu_Id id = get_id(title, istrlen(title));
         mu_Container *cnt = get_container_internal(id, opt);
@@ -837,10 +841,9 @@ package: // for game.d
     /**
         Called by game.d, create the immediate UI system.
     */
-    this(Font font) 
+    this() 
     {
-        _style = default_style(font);
-        style = &_style;
+
     }
 
     ~this()
