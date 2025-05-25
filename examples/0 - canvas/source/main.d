@@ -18,6 +18,26 @@ class CanvasExample : TurtleGame
         if (keyboard.isDown("escape")) exitGame;
     }
 
+    override void gui()
+    {
+        with (ui)
+        {
+            if (beginWindow("Tweak", rectangle(10, 10, 410, 280)))
+            {
+                slider(&rBase, 0, 255);
+                slider(&gBase, 0, 255);
+                slider(&bBase, 0, 255);
+
+                if (button("Exit")) exitGame;
+                endWindow;
+            }
+        }
+    }
+
+    double rBase = 255;
+    double gBase = 64;
+    double bBase = 128;
+
     override void draw()
     {
         foreach(layer; 0..8)
@@ -34,9 +54,9 @@ class CanvasExample : TurtleGame
 
                     auto gradient = createCircularGradient(0, 0, 3);
 
-                    int r = 255 - layer * 32;
-                    int g = 64 + layer * 16;
-                    int b = 128;
+                    double r = rBase - layer * 32;
+                    double g = gBase + layer * 16;
+                    double b = bBase;
                     gradient.addColorStop(0, rgba(r, g, b, 1.0));
                     gradient.addColorStop(1, rgba(r/2, g/3, b/2, 1.0));
 
