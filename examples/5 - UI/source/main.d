@@ -37,14 +37,11 @@ class UIExample : TurtleGame
                 {
                     box2i wi = currentContainerRect();
 
-                    char[64] buf;
                     layoutRow(2, [ 54, -1 ].ptr, 0);
                     label("Position:");
-                    sprintf(buf.ptr, "%d, %d", wi.min.x, wi.min.y); 
-                    label(buf.ptr);
+                    label( format("%d, %d", wi.min.x, wi.min.y) );
                     label("Size:");
-                    sprintf(buf.ptr, "%d, %d", wi.width, wi.height); 
-                    label(buf.ptr);
+                    label( format("%d, %d", wi.width, wi.height) );
                 }
 
                 /* labels + buttons */
@@ -132,9 +129,8 @@ class UIExample : TurtleGame
                     /* color preview */
                     box2i r = layoutNext();
                     drawRect(r, rgb(bg[0], bg[1], bg[2], 1.0));
-                    char[32] buf;
-                    sprintf(buf.ptr, "#%02X%02X%02X", cast(int) bg[0], cast(int) bg[1], cast(int) bg[2]);
-                    drawControlText(buf.ptr, r, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
+                    string buf = format("#%02X%02X%02X", cast(int) bg[0], cast(int) bg[1], cast(int) bg[2]);
+                    drawControlText(buf, r, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
                 }
 
                 endWindow();
