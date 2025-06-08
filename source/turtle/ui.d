@@ -132,15 +132,16 @@ enum : int
     - gets passed a buffer and Font
     - clean-up of API
 
-    You can get the `MicroUI` object with the `Game.ui()` call.
+    You can get the `MicroUI` object with the `Game.ui()` 
+    call.
 */
 class MicroUI
 {
 private:
 
     /** 
-        Change font face used in the whole UI. Default font is Lato
-        regular.
+        Change font face used in the whole UI. Default font 
+        is Lato regular.
     */
     public void setFont(const(void)[] fontBinary)
     {
@@ -153,11 +154,11 @@ private:
         style = &_style;
     }
 
-    // Id for widget, this is typically auto-generated.
+    /**
+        Id for widget, this is typically auto-generated.
+    */
     private alias mu_Id = uint;
-
-
-    
+   
 
     /// Returns: UI root font-size in px.
     float fontSizePx()
@@ -180,36 +181,48 @@ private:
     /**
         Basic text display.
     */
-    public void text(const(char)* text) 
+    public void text(const(char)[] text) 
     {
-        const(char)* start, end, p = text;
+        //const(char)* start, end, p = text;
         int width = -1;
         mu_Font font = style.font;
         Color color = style.colors[MU_COLOR_TEXT];
         layoutBeginColumn();
         layoutRow(1, &width, text_height(font));
-        do {
+
+        size_t start, end, p = 0;
+        do 
+        {
             box2i r = layoutNext();
             int w = 0;
             start = end = p;
-            do {
-                const(char)* word = p;
-                while (*p && *p != ' ' && *p != '\n') { p++; }
-                w += text_width(font, word, cast(int)(p - word));
-                if (w > r.width && end != start) { break; }
-                w += text_width(font, p, 1);
+            do 
+            {
+                size_t word = p;
+
+                while (p < text.length && text[p] != ' ' && text[p] != '\n')
+                { 
+                    p++; 
+                }
+                w += text_width(font, text[word..p]);
+
+                if (w > r.width && end != start) 
+                    break;
+                if (p+1 < text.length)
+                    w += text_width(font, text[p..p+1]);
                 end = p++;
-            } while (*end && *end != '\n');
-            drawText(font, start, cast(int)(end - start), vec2i(r.min.x, r.min.y), color);
+
+            } while (end < text.length && text[end] != '\n');
+            drawText(font, text[start..end], vec2i(r.min.x, r.min.y), color);
             p = end + 1;
-        } while (*end);
+        } while (end < text.length);
         layoutEndColumn();
     }
 
     /**
         A simple text label.
     */
-    public void label(const(char)* text) 
+    public void label(const(char)[] text) 
     {
         drawControlText(text, layoutNext(), MU_COLOR_TEXT, 0);
     }
@@ -217,10 +230,10 @@ private:
     /**
         A simple clickable button with optional icon.
     */
-    public int button(const(char)* label, int icon = 0, int opt = MU_OPT_ALIGNCENTER) 
+    public int button(const(char)[] label, int icon = 0, int opt = MU_OPT_ALIGNCENTER) 
     {
         int res = 0;
-        mu_Id id = label ? get_id(label, istrlen(label))
+        mu_Id id = label ? get_id(label.ptr, istrlen(label))
             : get_id(&icon, isizeof!icon);
         box2i r = layoutNext();
         update_control(id, r, opt);
@@ -235,7 +248,7 @@ private:
         return res;
     }
 
-    public int checkbox(const(char)* label, int *state) 
+    public int checkbox(const(char)[] label, int *state) 
     {
         int res = 0;
         mu_Id id = get_id(&state, isizeof!state);
@@ -259,11 +272,11 @@ private:
         return res;
     }
 
-    public int textbox(char *buf, int bufsz, int opt = 0) 
+    public int textbox(char[] buf, int bufsz, int opt = 0) 
     {
-        mu_Id id = get_id(&buf, cast(int) buf.sizeof);
+        mu_Id id = get_id(buf.ptr, cast(int) buf.length);
         box2i r = layoutNext();
-        return textbox_raw(buf, bufsz, id, r, opt);
+        return textbox_raw(buf.ptr, bufsz, id, r, opt);
     }
 
 
@@ -309,7 +322,7 @@ private:
         draw_control_frame(id, thumb, MU_COLOR_BUTTON, opt);
         /* draw text  */
         sprintf(buf.ptr, fmt, v);
-        drawControlText(buf.ptr, base, MU_COLOR_TEXT, opt);
+        drawControlText(buf[0..strlen(buf.ptr)], base, MU_COLOR_TEXT, opt);
 
         return res;
     }
@@ -342,12 +355,12 @@ private:
         draw_control_frame(id, base, MU_COLOR_BASE, opt);
         /* draw text  */
         sprintf(buf.ptr, fmt, *value);
-        drawControlText(buf.ptr, base, MU_COLOR_TEXT, opt);
+        drawControlText(buf, base, MU_COLOR_TEXT, opt);
         return res;
     }
 
     /// TODO ddoc
-    public int beginTreenode(const(char)* label, int opt = 0) 
+    public int beginTreenode(const(char)[] label, int opt = 0) 
     {
         int res = header_internal(label, 1, opt);
         if (res & MU_RES_ACTIVE) {
@@ -367,7 +380,7 @@ private:
     /**
         Display a title header, eg. for the top of a window.
     */
-    public int header(const(char)* label, int opt = 0) 
+    public int header(const(char)[] label, int opt = 0) 
     {
         return header_internal(label, 0, opt);
     }
@@ -377,11 +390,11 @@ private:
     // windows
     //
 
-    public int beginWindow(const(char)* title, box2i rect, int opt = 0) 
+    public int beginWindow(const(char)[] title, box2i rect, int opt = 0) 
     {
         assert(style !is null);
         box2i body;
-        mu_Id id = get_id(title, istrlen(title));
+        mu_Id id = get_id(title.ptr, istrlen(title));
         mu_Container *cnt = get_container_internal(id, opt);
         if (!cnt || !cnt.open) { return 0; }
         id_stack.push(id);
@@ -477,13 +490,14 @@ private:
         end_root_container();
     }
 
-    void begin_panel(const(char)* name, int opt = 0) 
+    void begin_panel(const(char)[] name, int opt = 0) 
     {
         mu_Container *cnt;
-        push_id(name, istrlen(name));
+        push_id(name.ptr, istrlen(name));
         cnt = get_container_internal(last_id, opt);
         cnt.rect = layoutNext();
-        if (~opt & MU_OPT_NOFRAME) {
+        if (~opt & MU_OPT_NOFRAME) 
+        {
             draw_frame(cnt.rect, MU_COLOR_PANELBG);
         }
         container_stack.push(cnt);
@@ -500,7 +514,7 @@ private:
     //
     // popups
     //
-    public void openPopup(const(char)* name) 
+    public void openPopup(const(char)[] name) 
     {
         mu_Container *cnt = get_container(name);
         /* set as hover root so popup isn't closed in beginWindow()  */
@@ -511,7 +525,7 @@ private:
         bring_to_front(cnt);
     }
 
-    public int beginPopup(const(char)* name) 
+    public int beginPopup(const(char)[] name) 
     {
         int opt = MU_OPT_POPUP 
                 | MU_OPT_AUTOSIZE
@@ -529,9 +543,6 @@ private:
     }
 
 
-
-
-
     //
     // draw
     //
@@ -543,7 +554,8 @@ private:
     {
         mu_Command *cmd;
         rect = intersect_rects(rect, get_clip_rect());
-        if (rect.width > 0 && rect.height > 0) {
+        if (rect.width > 0 && rect.height > 0) 
+        {
             cmd = push_command( MU_COMMAND_RECT, cast(int)mu_RectCommand.sizeof);
             cmd.rect.rect = rect;
             cmd.rect.color = color;
@@ -565,11 +577,11 @@ private:
         Draw text on the UI.
     */
     public void drawText(mu_Font font, 
-                         const(char)* str, int len,
+                         const(char)[] str, 
                          vec2i pos, Color color)
     {
         mu_Command *cmd;
-        box2i rect = rectangle(pos.x, pos.y, text_width(font, str, len), text_height(font));
+        box2i rect = rectangle(pos.x, pos.y, text_width(font, str), text_height(font));
         int clipped = check_clip(rect);
         if (clipped == MU_CLIP_ALL ) 
             return;
@@ -578,14 +590,10 @@ private:
             set_clip(get_clip_rect()); 
         }
 
-        /* add command */
-        if (len < 0) 
-        { 
-            len = istrlen(str); // ugly
-        }
+        int len = cast(int) str.length;
 
         cmd = push_command(MU_COMMAND_TEXT, cast(int)(mu_TextCommand.sizeof) + len);
-        memcpy(cmd.text.str.ptr, str, len);
+        memcpy(cmd.text.str.ptr, str.ptr, len);
         cmd.text.str.ptr[len] = '\0'; // do not perform bounds here, since it's out of struct
         cmd.text.pos = pos;
         cmd.text.color = color;
@@ -732,9 +740,9 @@ private:
         return container_stack.items[container_stack.idx - 1];
     }
 
-    private mu_Container* get_container(const(char)* name) 
+    private mu_Container* get_container(const(char)[] name) 
     {
-        mu_Id id = get_id(name, istrlen(name));
+        mu_Id id = get_id(name.ptr, istrlen(name));
         return get_container_internal(id, 0);
     }
 
@@ -829,16 +837,22 @@ private:
         mu_Style *style = style;
         box2i res;
 
-        if (layout.next_type) {
+        if (layout.next_type) 
+        {
             /* handle rect set by `mu_layout_set_next` */
             int type = layout.next_type;
             layout.next_type = 0;
             res = layout.next;
-            if (type == ABSOLUTE) { return (last_rect = res); }
-
-        } else {
+            if (type == ABSOLUTE) 
+            { 
+                return (last_rect = res); 
+            }
+        } 
+        else 
+        {
             /* handle next row */
-            if (layout.item_index == layout.items) {
+            if (layout.item_index == layout.items) 
+            {
                 layoutRow(layout.items, null, layout.size.y);
             }
 
@@ -877,14 +891,14 @@ private:
     /**
     TODO DDoc
     */
-    public void drawControlText(const(char)* str, 
+    public void drawControlText(const(char)[] str, 
                                   box2i rect,
                                   int colorid, 
                                   int opt)
     {
         vec2i pos;
         mu_Font font = style.font;
-        int tw = text_width(font, str, -1);
+        int tw = text_width(font, str);
         push_clip_rect(rect);
         pos.y = rect.min.y + (rect.height - text_height(font)) / 2;
         if (opt & MU_OPT_ALIGNCENTER) {
@@ -894,7 +908,7 @@ private:
         } else {
             pos.x = rect.min.x + style.padding;
         }
-        drawText(font, str, -1, pos, style.colors[colorid]);
+        drawText(font, str, pos, style.colors[colorid]);
         pop_clip_rect();
     }
 
@@ -1187,12 +1201,12 @@ package: // for game.d
         key_down &= ~key;
     }
 
-    void input_text(const(char)*text) 
+    void input_text(const(char)[] text) 
     {
-        int len = istrlen(input_text_buf.ptr);
+        int len = cast(int) strlen(input_text_buf.ptr);
         int size = istrlen(text) + 1;
         assert(len + size <= isizeof!(input_text_buf));
-        memcpy(input_text_buf.ptr + len, text, size);
+        memcpy(input_text_buf.ptr + len, text.ptr, size);
     }
 
     enum : int 
@@ -1206,11 +1220,11 @@ package: // for game.d
     }
 
     // and their only implementation
-    int text_width(mu_Font font, const(char)*str, int len)
+    int text_width(mu_Font font, const(char)[] str)
     {
         Font dplugFont = cast(Font)font;
         assert(dplugFont);
-        if (len == -1) len = cast(int) strlen(str);
+        int len = cast(int) str.length;
         box2i b = dplugFont.measureText(str[0..len], _uiFontsizePx, 0);
         return b.width;
     }
@@ -1683,8 +1697,8 @@ private:
 
         if (focus == id) {
             /* handle text input */
-            int len = istrlen(buf);
-            int n = mu_min(bufsz - len - 1, istrlen(input_text_buf.ptr));
+            int len = cast(int) strlen(buf);
+            int n = mu_min(bufsz - len - 1, cast(int) strlen(input_text_buf.ptr));
             if (n > 0) {
                 memcpy(buf + len, input_text_buf.ptr, n);
                 len += n;
@@ -1700,8 +1714,9 @@ private:
                 res |= MU_RES_CHANGE;
             }
             /* handle return */
-            if (key_pressed & MU_KEY_RETURN) {
-            set_focus(0);
+            if (key_pressed & MU_KEY_RETURN) 
+            {
+                set_focus(0);
                 res |= MU_RES_SUBMIT;
             }
         }
@@ -1711,17 +1726,19 @@ private:
         if (focus == id) {
             Color color = style.colors[MU_COLOR_TEXT];
             mu_Font font = style.font;
-            int textw = text_width(font, buf, -1);
+            int textw = text_width(font, buf[0..strlen(buf)]);
             int texth = text_height(font);
             int ofx = r.width - style.padding - textw - 1;
             int textx = r.min.x + mu_min(ofx, style.padding);
             int texty = r.min.y + (r.height - texth) / 2;
             push_clip_rect(r);
-            drawText(font, buf, -1, vec2i(textx, texty), color);
+            drawText(font, buf[0..strlen(buf)], vec2i(textx, texty), color);
             drawRect(rectangle(textx + textw, texty, 1, texth), color);
             pop_clip_rect();
-        } else {
-            drawControlText(buf, r, MU_COLOR_TEXT, opt);
+        } 
+        else 
+        {
+            drawControlText(buf[0..strlen(buf)], r, MU_COLOR_TEXT, opt);
         }
 
         return res;
@@ -1862,11 +1879,11 @@ private:
         cnt.body = body;
     }
 
-    private int header_internal(const(char)* label, int istreenode, int opt) 
+    private int header_internal(const(char)[] label, int istreenode, int opt) 
     {
         box2i r;
         int active, expanded;
-        mu_Id id = get_id(label, istrlen(label));
+        mu_Id id = get_id(label.ptr, istrlen(label));
         int idx = pool_get(treenode_pool.ptr, MU_TREENODEPOOL_SIZE, id);
         int width = -1;
         layoutRow(1, &width, 0);
@@ -1938,11 +1955,9 @@ struct mu_stack(T, size_t N)
 }
 
 // microui rightly uses int as size_t
-int istrlen(const(char)* s)
+int istrlen(const(char)[] s)
 {
-    size_t len = strlen(s);
-    assert(len <= int.max);
-    return cast(int) strlen(s);
+    return cast(int) s.length;
 }
 
 // replaces cast(int) blah.sizeof
