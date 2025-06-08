@@ -19,10 +19,36 @@ class CanvasComparisonExample : TurtleGame
     override void update(double dt)
     {
         if (keyboard.isDown("escape")) exitGame;
-        rotation += dt*0.08;
+        rotation += dt*rotateSpeed;
     }
 
     double rotation = 0;
+
+    double rotateSpeed = 0.08;
+    double drawScale = 40;
+    double branches = 10;
+
+    override void gui()
+    {
+        with (ui)
+        {
+            if (beginWindow("Tweak", rectangle(10, 10, 410, 280)))
+            {
+                label("Rotate");
+                slider(&rotateSpeed, 0, 1);
+
+                label("Scale");
+                slider(&drawScale, 10, 80);
+
+                label("Branches");
+                slider(&branches, 1, 30);
+
+                label("Quit Example");
+                if (button("Quit")) exitGame;
+                endWindow;
+            }
+        }
+    }
 
     override void draw()
     {
@@ -59,17 +85,18 @@ class CanvasComparisonExample : TurtleGame
             "rgba(255, 0, 255, 0.5)",
         ];
 
-        with(canvas)
-        {
-            
-            
-            translate(W/3, H/2);
-            scale(40, 40);
+        int numBranches = cast(int)branches;
+        double reduction = exp(-1.0 / numBranches);
 
-            foreach (n; 0..10)
+        with(canvas)
+        {   
+            translate(W/3, H/2);
+            scale(drawScale, drawScale);
+
+            foreach (n; 0..numBranches)
             {
                 fillStyle = COLORS[n % 7];
-                scale(0.8,0.8);
+                scale(reduction,reduction);
                 rotate(rotation);
 
                 beginPath();
@@ -96,13 +123,13 @@ class CanvasComparisonExample : TurtleGame
         {
             
             translate(2*W/3, H/2);
-            scale(40, 40);
+            scale(drawScale, drawScale);
             
 
-            foreach (n; 0..10)
+            foreach (n; 0..numBranches)
             {
                 fillStyle = COLORSity[n % 7];
-                scale(0.8,0.8);
+                scale(reduction,reduction);
                 rotate(rotation);
 
                 beginPath();                

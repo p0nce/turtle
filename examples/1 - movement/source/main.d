@@ -18,9 +18,25 @@ class MovementExample : TurtleGame
         setBackgroundColor( color("rgba(0, 0, 0, 10%)") );
     }
 
+    override void gui()
+    {
+        with (ui)
+        {
+            if (beginWindow("Change speed here", rectangle(10, 10, 410, 280)))
+            {
+                label("Speed");
+                slider(&SPEED, 1, 30);
+                if (button("Exit")) exitGame;
+                endWindow;
+            }
+        }
+    }
+
+    double SPEED = 10;
+
     override void update(double dt)
     {
-        float SPEED = 10;
+        
         if (keyboard.isDown("left")) posx -= SPEED * dt;
         if (keyboard.isDown("right")) posx += SPEED * dt;
         if (keyboard.isDown("up")) posy -= SPEED * dt;
