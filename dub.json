@@ -13,7 +13,7 @@
     "dependencies":
     {
         "bindbc-sdl": "~>2.0",
-        "dplug:math": ">=15.0.12 <17.0.0",
+        "godot-math": ">=0.0.0 <2.0.0",
         "dplug:canvas": ">=15.0.12 <17.0.0",
         "colors": "~>0.0",
         "canvasity": "~>1.0",

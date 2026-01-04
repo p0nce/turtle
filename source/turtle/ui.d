@@ -124,6 +124,8 @@ enum : int
     MU_OPT_EXPANDED     = (1 << 12)
 }
 
+nothrow:
+@nogc:
 
 /** 
     Provides immediate UI functionality in `turtle`.
@@ -138,6 +140,8 @@ enum : int
 class MicroUI
 {
 private:
+nothrow:
+@nogc:
 
     /** 
         Change font face used in the whole UI. Default font 
@@ -922,11 +926,11 @@ package: // for game.d
     /**
         Called by game.d, create the immediate UI system.
     */
-    this() 
+    public this() 
     {
     }
 
-    ~this()
+    public ~this()
     {
         destroyFree(_uiFont);
     }

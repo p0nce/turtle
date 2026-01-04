@@ -38,17 +38,17 @@ class RawRenderExample : TurtleGame
 
         // Compute camera rays
         
-        vec3f target = vec3f(_model.width*0.5f, _model.height*0.5f, _model.depth*0.5f);
+        Vector3 target = Vector3(_model.width*0.5f, _model.height*0.5f, _model.depth*0.5f);
 
         
         float Z = sin(elapsedTime * 0.3f) * 3.0f;
-        vec3f eye    = target + vec3f(sin(elapsedTime)*15.0f, -cos(elapsedTime)*15.0f, Z);
-        vec3f up     = vec3f(0.0f, 0.0f, 1.0f);
-        vec3f right  = vec3f(1.0f, 0.0f, 0.0f);
+        Vector3 eye    = target + Vector3(sin(elapsedTime)*15.0f, -cos(elapsedTime)*15.0f, Z);
+        Vector3 up     = Vector3(0.0f, 0.0f, 1.0f);
+        Vector3 right  = Vector3(1.0f, 0.0f, 0.0f);
 
-        vec3f camZ = (eye - target).normalized();
-        vec3f camX = cross(-up, camZ).normalized();
-        vec3f camY = cross(camZ, -camX);
+        Vector3 camZ = (eye - target).normalized();
+        Vector3 camX = -up.cross(camZ).normalized();
+        Vector3 camY = camZ.cross(-camX);
 
         for (int y = 0; y < H; ++y)
         {
@@ -60,9 +60,11 @@ class RawRenderExample : TurtleGame
                 float dx = (x - (W-1) * 0.5f) / (W * 0.5f);
                 float dy = (y - (H-1) * 0.5f) / (H * 0.5f);
 
+                Vector3 dir = (-camZ + camX * dx * ar - camY * dy).normalized();
+                
                 Ray ray;
-                ray.orig = eye;
-                ray.dir = (-camZ + camX * dx * ar - camY * dy).fastNormalized;
+                ray.orig = vec3f(eye.x, eye.y, eye.z);
+                ray.dir  = vec3f(dir.x, dir.y, dir.z);
 
                 float t;
                 vec3i hitIndex;

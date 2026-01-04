@@ -8,6 +8,8 @@ import dplug.core;
 
 import voxd;
 
+// FUTURE: use only Godot-math, needs AABB and .ptr for godot-math types
+
 struct Ray
 {
 nothrow:

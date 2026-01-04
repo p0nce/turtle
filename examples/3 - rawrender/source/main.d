@@ -61,7 +61,10 @@ class RawRenderExample : TurtleGame
             if (current == type)
             {
                 canvas.fillStyle = RGBA(255, 0, 0, 128);
-                canvas.fillRect(buttonBox(type).shrink(8));
+                Rect2 box = buttonBox(type);
+                box.position += Vector2(4, 4);
+                box.size -= Vector2(8, 8);
+                canvas.fillRect(box);
             }
         }
 
@@ -93,7 +96,7 @@ class RawRenderExample : TurtleGame
         // pressed a button?
         for(CellType type = CellType.sand; type <= CellType.max; ++type)
         {
-            if (buttonBox(type).contains(vec2f(x, y)))
+            if (buttonBox(type).has_point(Point2(x, y)))
             {
                 current = type;
                 _drag = false;
@@ -144,9 +147,9 @@ class RawRenderExample : TurtleGame
     // Selected cell type
     CellType current = CellType.sand;
 
-    box2f buttonBox(CellType type)
+    Rect2 buttonBox(CellType type)
     {
-        return box2f.rectangle(8, 8 + 40 * (cast(int)type - 1), 24, 24);
+        return Rect2(8, 8 + 40 * (cast(int)type - 1), 24, 24);
     }    
 
     bool _drag = false;
