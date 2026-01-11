@@ -55,7 +55,19 @@ class SpaceInvadersExample : TurtleGame
 
     override void update(double dt)
     {
-        console.update(dt);
+        // turn into fixed frame time
+        _debt += dt;
+
+        while (_debt >= 0.0)
+        {
+            updateFixed(0.06);
+            _debt -= 0.06;
+        }
+    }
+    double _debt = 0;
+
+    void updateFixed(double dt)
+    {
         if (keyboard.isDown("left") && playerX > 0) playerX--;
         if (keyboard.isDown("right") && playerX < 28) playerX++;
         if (keyboard.isDown("up") && playerY > 17) playerY--;
